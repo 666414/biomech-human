@@ -26,6 +26,19 @@ class SceneConfig:
     sink_track: list | None = None   # 下沉轨迹 [[u%, m], ...]，正 = 向下
 
 
+def _num(value, what):
+    """数值校验：非数值时抛带定位信息的 ValueError。"""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"{what} 须为数值，得到 {value!r}")
+    return float(value)
+
+
+def _int(value, what):
+    if isinstance(value, bool) or not isinstance(value, int):
+        raise ValueError(f"{what} 须为整数，得到 {value!r}")
+    return value
+
+
 def _validate_track(name, track, vector=False):
     if not isinstance(track, list) or len(track) < 2:
         raise ValueError(f"轨迹 {name} 至少需要 2 个关键点")
@@ -37,7 +50,7 @@ def _validate_track(name, track, vector=False):
         else:
             if not isinstance(row, list) or len(row) != 2:
                 raise ValueError(f"轨迹 {name} 每行须为 [u%, value]")
-        u = float(row[0])
+        u = _num(row[0], f"轨迹 {name} 关键点 u")
         if not (0.0 <= u <= 100.0):
             raise ValueError(f"轨迹 {name} 关键点 u={row[0]} 超出 [0,100]")
         if u < prev_u:
@@ -49,17 +62,22 @@ def load_scene(path):
     with open(path, "r", encoding="utf-8") as f:
         raw = yaml.safe_load(f)
 
+    if not isinstance(raw, dict):
+        raise ValueError("场景 YAML 须为映射（检查文件是否为空）")
+
     for k in ("name", "xml", "duration", "sim_stride", "muscles"):
         if k not in raw:
             raise ValueError(f"场景缺少字段 {k}")
     name = str(raw["name"])
-    duration = float(raw["duration"])
+    duration = _num(raw["duration"], "duration")
     if duration <= 0:
         raise ValueError(f"场景 {name} duration 须为正")
-    stride = int(raw["sim_stride"])
+    stride = _int(raw["sim_stride"], "sim_stride")
     if stride < 1:
         raise ValueError(f"场景 {name} sim_stride 须 >= 1")
 
+    if not isinstance(raw["muscles"], list):
+        raise ValueError("muscles 须为列表")
     muscles = [str(m) for m in raw["muscles"]]
     if not (1 <= len(muscles) <= 10):
         raise ValueError(f"场景 {name} 肌肉数须在 1~10（教学重点导出）")
@@ -87,14 +105,15 @@ def load_scene(path):
     for kf in keyframes:
         if not ({"t", "label", "cardId"} <= set(kf)):
             raise ValueError("keyframes 每项须含 t/label/cardId")
-        if not (0.0 <= float(kf["t"]) <= duration):
-            raise ValueError(f"keyframe t={kf['t']} 超出时长 {duration}s")
+        t = _num(kf["t"], "keyframe t")
+        if not (0.0 <= t <= duration):
+            raise ValueError(f"keyframe t={t} 超出时长 {duration}s")
 
     ground = raw.get("ground") or {}
     ground_mode = str(ground.get("mode", "auto"))
     if ground_mode not in ("auto", "manual"):
         raise ValueError(f"ground.mode 须为 auto|manual，得到 {ground_mode}")
-    ground_target_grf = float(ground.get("target_grf", 1.0))
+    ground_target_grf = _num(ground.get("target_grf", 1.0), "ground.target_grf")
     if ground_mode == "auto" and ground_target_grf <= 0:
         raise ValueError("ground.target_grf 须为正（体重倍数）")
 
@@ -114,7 +133,7 @@ def load_scene(path):
         keyframes=keyframes,
         ground_mode=ground_mode,
         ground_target_grf=ground_target_grf,
-        ground_offset=float(ground.get("offset", 0.0)),
+        ground_offset=_num(ground.get("offset", 0.0), "ground.offset"),
         sink_track=sink_track,
     )
 

@@ -116,3 +116,20 @@ def test_validate_unknown_muscle(tmp_path):
     m = mujoco.MjModel.from_xml_path(scene.xml)
     with pytest.raises(ValueError, match="no_muscle"):
         validate_against_model(scene, m)
+
+
+def test_muscles_not_list_raises(tmp_path):
+    bad = MINI_YAML.replace("muscles: [tibant_r]", "muscles: tibant_r")
+    with pytest.raises(ValueError, match="列表"):
+        load_scene(write_yaml(tmp_path, bad))
+
+
+def test_track_u_not_number_raises(tmp_path):
+    bad = MINI_YAML.replace("[100, 10]", "[null, 10]")
+    with pytest.raises(ValueError, match="数值"):
+        load_scene(write_yaml(tmp_path, bad))
+
+
+def test_empty_yaml_raises(tmp_path):
+    with pytest.raises(ValueError, match="映射"):
+        load_scene(write_yaml(tmp_path, ""))
