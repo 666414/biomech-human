@@ -9,6 +9,7 @@ import argparse
 import glob
 import hashlib
 import os
+import shutil
 
 
 def sha256_of(path):
@@ -55,11 +56,17 @@ def main(argv=None):
         path = run_scene(args.scene, args.out)
         print(f"OK {path} ({os.path.getsize(path)} bytes)")
         if args.check_repeatability:
-            h = check_repeatability(args.scene,
-                                    args.out + "_rep_a", args.out + "_rep_b")
+            out_norm = os.path.normpath(args.out)
+            tmp_a, tmp_b = out_norm + "_rep_a", out_norm + "_rep_b"
+            h = check_repeatability(args.scene, tmp_a, tmp_b)
+            shutil.rmtree(tmp_a)
+            shutil.rmtree(tmp_b)
             print(f"REPEATABLE sha256={h}")
     else:
-        for yml in sorted(glob.glob(os.path.join(args.all_dir, "*.yaml"))):
+        yamls = sorted(glob.glob(os.path.join(args.all_dir, "*.yaml")))
+        if not yamls:
+            ap.error(f"目录 {args.all_dir} 中未找到 *.yaml")
+        for yml in yamls:
             path = run_scene(yml, args.out)
             print(f"OK {path} ({os.path.getsize(path)} bytes)")
 

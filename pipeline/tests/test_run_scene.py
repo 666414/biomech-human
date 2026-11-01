@@ -1,6 +1,6 @@
 import os
 import pytest
-from pipeline.run_scene import main, run_scene, check_repeatability, sha256_of
+from pipeline.run_scene import main, run_scene, check_repeatability
 
 XML = "assets/MS-Human-700/MS-Human-700.xml"
 
@@ -53,7 +53,36 @@ def test_cli_repeatability_flag(mini_yaml, tmp_path, capsys):
 def test_cli_batch(mini_yaml, tmp_path, capsys):
     batch = tmp_path / "scenes"
     batch.mkdir()
-    (batch / "mini.yaml").write_text(MINI_YAML, encoding="utf-8")
-    main(["--all", str(batch), "--out", str(tmp_path / "cli_out")])
+    body = MINI_YAML.split("name: mini", 1)[1]
+    (batch / "mini_a.yaml").write_text("name: mini_a" + body, encoding="utf-8")
+    (batch / "mini_b.yaml").write_text("name: mini_b" + body, encoding="utf-8")
+    out_dir = str(tmp_path / "cli_out")
+    main(["--all", str(batch), "--out", out_dir])
     out = capsys.readouterr().out
-    assert out.count("OK") == 1
+    assert out.count("OK") == 2
+    assert os.path.isfile(os.path.join(out_dir, "mini_a.json"))
+    assert os.path.isfile(os.path.join(out_dir, "mini_b.json"))
+
+
+def test_check_repeatability_failure(tmp_path, monkeypatch):
+    calls = []
+
+    def fake_run_scene(scene_path, out_dir):
+        os.makedirs(out_dir, exist_ok=True)
+        path = os.path.join(out_dir, "result.json")
+        calls.append(out_dir)
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(f"run-{len(calls)}")
+        return path
+
+    monkeypatch.setattr("pipeline.run_scene.run_scene", fake_run_scene)
+    with pytest.raises(RuntimeError, match="可重复性校验失败"):
+        check_repeatability("fake.yaml",
+                            str(tmp_path / "a"), str(tmp_path / "b"))
+
+
+def test_cli_batch_empty_dir(tmp_path):
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    with pytest.raises(SystemExit):
+        main(["--all", str(empty), "--out", str(tmp_path / "cli_out")])
