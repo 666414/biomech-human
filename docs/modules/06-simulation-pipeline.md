@@ -1,4 +1,4 @@
-# 06 仿真预计算流水线 `[状态: 设计已批准]`
+# 06 仿真预计算流水线 `[P2 已实现]`
 
 ## 核心定位
 
@@ -43,6 +43,8 @@
   → scenes/<scene>.json（含 keyframes）
   → 人工抽查曲线合理性 → 进静态资源层
 ```
+
+实现：pipeline/（scene_loader / pose_tracks / simulate_scene / export_scene / run_scene + scenes/*.yaml）
 
 ## 验收要点（P2）
 

@@ -1,0 +1,21 @@
+# 肩外展（1.5s，0→90°→保持→放下，主模型）。shoulder_elv_r rad，激活度 0-1。
+name: shoulder_abduction
+xml: assets/MS-Human-700/MS-Human-700.xml
+duration: 1.5
+sim_stride: 10
+ground:
+  mode: auto
+  target_grf: 1.0
+muscles: [DELT1_r, DELT2_r, DELT3_r, trap_cl, gasmed_r, tibant_r]
+pose_tracks:
+  shoulder_elv_r: [[0, 0], [40, 1.57], [70, 1.57], [100, 0]]
+muscle_tracks:
+  DELT1_r: [[0, 0.05], [40, 0.55], [70, 0.60], [100, 0.05]]
+  DELT2_r: [[0, 0.05], [40, 0.70], [70, 0.75], [100, 0.05]]
+  DELT3_r: [[0, 0.05], [40, 0.50], [70, 0.50], [100, 0.05]]
+  trap_cl: [[0, 0.05], [40, 0.40], [70, 0.45], [100, 0.05]]
+  gasmed_r: [[0, 0.15], [40, 0.20], [70, 0.20], [100, 0.15]]
+  tibant_r: [[0, 0.10], [40, 0.15], [70, 0.15], [100, 0.10]]
+keyframes:
+  - {t: 0.6, label: 肩外展 90°（三角肌中束主导）, cardId: sh_90}
+  - {t: 1.05, label: 静力保持（肌力矩平衡重力矩）, cardId: sh_hold}
