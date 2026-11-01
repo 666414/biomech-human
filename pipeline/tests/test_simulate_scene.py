@@ -92,3 +92,9 @@ def test_sink_track_lowers_pelvis():
     ty_adr = int(m.jnt_qposadr[mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_JOINT, "pelvis_ty")])
     r = simulate(mini_scene(sink_track=[[0, 0], [100, 0.01]]))
     assert r.qpos[-1, ty_adr] == pytest.approx(-0.02 - 0.01, abs=1e-9)
+
+
+def test_auto_ground_calibration_failure_raises():
+    with pytest.raises(RuntimeError, match="接地校准失败"):
+        simulate(mini_scene(ground_mode="auto", ground_target_grf=50.0,
+                            ground_offset=0.0))

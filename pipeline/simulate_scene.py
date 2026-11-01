@@ -44,14 +44,22 @@ class SimResult:
 
 
 def ground_reaction_force(m, d):
-    """世界系地面反作用力：floor 上全部接触力之和（contact frame → world）。"""
+    """世界系地面反作用力：floor 与模型间全部接触力之和（contact frame → world）。
+
+    方向判定：接触对中恰一侧属于 world（body 0）；力取「world 施加于模型」方向，
+    即世界系 GRF（z 向上为正）。
+    """
     grf = np.zeros(3)
     for ci in range(d.ncon):
         c = d.contact[ci]
-        if m.geom_bodyid[c.geom1] == 0 or m.geom_bodyid[c.geom2] == 0:
-            f6 = np.zeros(6)
-            mujoco.mj_contactForce(m, d, ci, f6)
-            grf += c.frame.reshape(3, 3).T @ f6[:3]
+        b1 = int(m.geom_bodyid[c.geom1])
+        b2 = int(m.geom_bodyid[c.geom2])
+        if b1 == 0 and b2 == 0:
+            continue
+        f6 = np.zeros(6)
+        mujoco.mj_contactForce(m, d, ci, f6)
+        fw = c.frame.reshape(3, 3).T @ f6[:3]
+        grf += fw if b1 == 0 else -fw
     return grf
 
 
@@ -80,7 +88,8 @@ def calibrate_ground(m, d, scene, joint_adr, act_adr, force_body_id):
 
     f(ty) 单调递减（ty 越小 GRF 越大）。返回区间中点；无法达标时抛错。
     """
-    target = scene.ground_target_grf * float(m.body_mass.sum()) * 9.81
+    g = float(-m.opt.gravity[2])
+    target = scene.ground_target_grf * float(m.body_mass.sum()) * g
     a, b = GROUND_SEARCH_LO, GROUND_SEARCH_HI
     _set_frame(m, d, scene, joint_adr, act_adr, force_body_id, a, 0.0)
     mujoco.mj_forward(m, d)
@@ -111,6 +120,11 @@ def simulate(scene):
                       for i in range(m.nu)]
     joint_adr = {n: int(m.jnt_qposadr[i]) for i, n in enumerate(joint_names)}
     act_adr = {n: i for i, n in enumerate(actuator_names)}
+    if len(act_adr) != m.nu:
+        raise ValueError("执行器名称存在重复，无法建立名称索引")
+    force_bodies = [f["body"] for f in scene.external_forces]
+    if len(set(force_bodies)) != len(force_bodies):
+        raise ValueError(f"同一 body 重复施加外力：{force_bodies}")
     force_body_id = {
         f["body"]: int(mujoco.mj_name2id(m, mujoco.mjtObj.mjOBJ_BODY, f["body"]))
         for f in scene.external_forces
