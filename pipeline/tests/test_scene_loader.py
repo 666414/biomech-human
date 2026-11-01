@@ -1,10 +1,8 @@
-import os
 import pytest
 import mujoco
 from pipeline.scene_loader import load_scene, validate_against_model, SceneConfig
 
-REPO = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", ".."))
-XML = os.path.join(REPO, "assets", "MS-Human-700", "MS-Human-700.xml")
+XML = "assets/MS-Human-700/MS-Human-700.xml"
 
 MINI_YAML = """\
 name: mini
@@ -18,25 +16,13 @@ muscle_tracks:
   tibant_r: [[0, 0.1], [100, 0.2]]
 keyframes:
   - {{t: 0.1, label: 测试, cardId: test_card}}
-""".format(xml=XML.replace("\\", "/"))
+""".format(xml=XML)
 
 
 def write_yaml(tmp_path, text):
     p = tmp_path / "scene.yaml"
     p.write_text(text, encoding="utf-8")
     return str(p)
-
-
-def load_model(xml_path):
-    """MuJoCo 在 Windows 下不支持含中文的路径，改用 from_xml_string 加载。"""
-    d = os.path.dirname(xml_path)
-    old = os.getcwd()
-    os.chdir(d)
-    try:
-        with open(xml_path, encoding="utf-8") as f:
-            return mujoco.MjModel.from_xml_string(f.read())
-    finally:
-        os.chdir(old)
 
 
 def test_load_mini_scene(tmp_path):
@@ -111,7 +97,7 @@ def test_force_track_format(tmp_path):
 
 def test_validate_against_model_ok(tmp_path):
     scene = load_scene(write_yaml(tmp_path, MINI_YAML))
-    m = load_model(scene.xml)
+    m = mujoco.MjModel.from_xml_path(scene.xml)
     validate_against_model(scene, m)  # 不抛异常即通过
 
 
@@ -119,7 +105,7 @@ def test_validate_against_model_unknown_joint(tmp_path):
     bad = MINI_YAML.replace("hip_flexion_r: [[0, 0], [100, 10]]",
                             "no_such_joint: [[0, 0], [100, 10]]")
     scene = load_scene(write_yaml(tmp_path, bad))
-    m = load_model(scene.xml)
+    m = mujoco.MjModel.from_xml_path(scene.xml)
     with pytest.raises(ValueError, match="no_such_joint"):
         validate_against_model(scene, m)
 
@@ -127,6 +113,6 @@ def test_validate_against_model_unknown_joint(tmp_path):
 def test_validate_unknown_muscle(tmp_path):
     bad = MINI_YAML.replace("tibant_r", "no_muscle")
     scene = load_scene(write_yaml(tmp_path, bad))
-    m = load_model(scene.xml)
+    m = mujoco.MjModel.from_xml_path(scene.xml)
     with pytest.raises(ValueError, match="no_muscle"):
         validate_against_model(scene, m)
