@@ -1,4 +1,5 @@
-"""仿真结果 → scenes/<scene>.json：float32 精度、教学契约结构、2MB 体积守卫。"""
+"""仿真结果 → scenes/<scene>.json：float32 精度、教学契约结构、2MB 体积守卫。
+超限抛错时，已写盘的残留文件会被删除。"""
 import json
 import os
 
@@ -35,8 +36,9 @@ def export_json(result, out_dir):
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, f"{scene.name}.json")
     with open(path, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, separators=(",", ":"))
+        json.dump(data, f, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
     size = os.path.getsize(path)
     if size > MAX_JSON_BYTES:
+        os.remove(path)
         raise RuntimeError(f"{path} 体积 {size}B 超过 2MB 上限")
     return path

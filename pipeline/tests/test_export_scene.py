@@ -60,3 +60,10 @@ def test_export_size_guard(tmp_path, monkeypatch):
     r = simulate(mini_scene())
     with pytest.raises(RuntimeError, match="2MB"):
         export_json(r, str(tmp_path))
+
+
+def test_export_nan_raises(tmp_path):
+    r = simulate(mini_scene())
+    r.grf[0, 0] = float("nan")
+    with pytest.raises(ValueError):
+        export_json(r, str(tmp_path))
