@@ -7,12 +7,9 @@ value 为标量（关节角 deg / 激活度 / 下沉 m）或 3 向量 [fx, fy, f
 
 
 def _val(row):
-    """行 [u, v] → 标量；行 [u, fx, fy, fz] 或 [u, [fx, fy, fz]] → 3 向量。"""
+    """行 [u, v] → 标量；行 [u, fx, fy, fz] → 3 向量。"""
     if len(row) == 2:
-        v = row[1]
-        if isinstance(v, (list, tuple)):
-            return [float(x) for x in v[:3]]
-        return float(v)
+        return float(row[1])
     return [float(x) for x in row[1:4]]
 
 

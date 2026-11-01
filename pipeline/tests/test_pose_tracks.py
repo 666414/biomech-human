@@ -13,7 +13,7 @@ def test_scalar_clamps_outside_domain():
 
 
 def test_vector_interpolation():
-    tr = [[0, [0, 0, 0]], [100, [10, -20, 30]]]
+    tr = [[0, 0, 0, 0], [100, 10, -20, 30]]
     assert eval_track(tr, 50) == [5.0, -10.0, 15.0]
 
 
