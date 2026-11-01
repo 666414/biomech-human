@@ -1,0 +1,7 @@
+.venv/
+pipeline/out/
+__pycache__/
+*.pyc
+.pytest_cache/
+.superpowers/
+assets/
