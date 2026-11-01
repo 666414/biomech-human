@@ -1,4 +1,4 @@
-# 踝内翻落地（0.8s，主模型）。subtalar 正=内翻（rad），下肢关节 deg，激活度 0-1。
+# 踝内翻落地（0.8s，主模型）。所有角度 deg：subtalar 正=内翻，下肢关节 deg，激活度 0-1。
 name: ankle_inversion
 xml: assets/MS-Human-700/MS-Human-700.xml
 duration: 0.8
@@ -8,7 +8,7 @@ ground:
   target_grf: 1.0
 muscles: [tibant_r, soleus_r, gaslat_r, gasmed_r, fdl_r, fhl_r]
 pose_tracks:
-  subtalar_angle_r: [[0, 0], [30, 0.25], [60, 0.25], [100, 0.05]]
+  subtalar_angle_r: [[0, 0], [30, 14.3], [60, 14.3], [100, 2.9]]  # subtalar deg，正=内翻
   hip_flexion_r: [[0, 5], [60, 15], [100, 8]]
   knee_angle_r: [[0, 8], [60, 18], [100, 10]]
   ankle_angle_r: [[0, 0], [60, -10], [100, -5]]
@@ -22,5 +22,5 @@ muscle_tracks:
   fdl_r: [[0, 0.10], [30, 0.20], [60, 0.25], [100, 0.15]]
   fhl_r: [[0, 0.10], [30, 0.20], [60, 0.25], [100, 0.15]]
 keyframes:
-  - {t: 0.24, label: 内翻落地瞬间（足外侧缘承重）, cardId: inv_impact}
+  - {t: 0.24, label: 内翻加载（足外侧缘承重增加）, cardId: inv_impact}
   - {t: 0.45, label: 踝外侧韧带高风险时刻（距腓前韧带）, cardId: inv_risk}

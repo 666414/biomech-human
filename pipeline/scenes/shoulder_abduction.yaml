@@ -1,4 +1,4 @@
-# 肩外展（1.5s，0→90°→保持→放下，主模型）。shoulder_elv_r rad，激活度 0-1。
+# 肩外展（1.5s，0→90°→保持→放下，主模型）。所有角度 deg（shoulder_elv deg），激活度 0-1。
 name: shoulder_abduction
 xml: assets/MS-Human-700/MS-Human-700.xml
 duration: 1.5
@@ -8,7 +8,7 @@ ground:
   target_grf: 1.0
 muscles: [DELT1_r, DELT2_r, DELT3_r, trap_cl, gasmed_r, tibant_r]
 pose_tracks:
-  shoulder_elv_r: [[0, 0], [40, 1.57], [70, 1.57], [100, 0]]
+  shoulder_elv_r: [[0, 0], [40, 90], [70, 90], [100, 0]]  # shoulder_elv deg
 muscle_tracks:
   DELT1_r: [[0, 0.05], [40, 0.55], [70, 0.60], [100, 0.05]]
   DELT2_r: [[0, 0.05], [40, 0.70], [70, 0.75], [100, 0.05]]
