@@ -3,6 +3,7 @@
 u 为归一化时间百分比（0~100，与场景 YAML 一致）；
 value 为标量（关节角 deg / 激活度 / 下沉 m）或 3 向量 [fx, fy, fz]（外力 N）。
 轨迹域外取端点值（平顶钳位）。
+行类型须一致（2 元标量行或 4 元向量行），u 须按升序排列。
 """
 
 
@@ -21,7 +22,9 @@ def eval_track(track, u):
         return _val(track[-1])
     for a, b in zip(track, track[1:]):
         if a[0] <= u <= b[0]:
-            w = 0.0 if b[0] == a[0] else (u - a[0]) / (b[0] - a[0])
+            if u == b[0]:
+                return _val(b)
+            w = (u - a[0]) / (b[0] - a[0])
             va, vb = _val(a), _val(b)
             if isinstance(va, list):
                 return [va[i] + (vb[i] - va[i]) * w for i in range(3)]

@@ -26,3 +26,19 @@ def test_multiple_keyframes_piecewise():
 def test_returns_float_not_int():
     tr = [[0, 3], [100, 3]]
     assert isinstance(eval_track(tr, 40), float)
+
+
+def test_exact_keypoint_value_reproduced():
+    tr = [[0, 0.1], [50, 0.2], [100, 0.3]]
+    assert eval_track(tr, 50) == 0.2
+
+
+def test_repeated_u_keyframe_takes_first():
+    tr = [[0, 0], [50, 10], [50, 20], [100, 0]]
+    assert eval_track(tr, 50) == 10.0
+
+
+def test_vector_clamps_outside_domain():
+    tr = [[0, 0, 0, 0], [100, 10, -20, 30]]
+    assert eval_track(tr, -5) == [0.0, 0.0, 0.0]
+    assert eval_track(tr, 150) == [10.0, -20.0, 30.0]
