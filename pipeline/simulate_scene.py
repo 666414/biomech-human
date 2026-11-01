@@ -54,8 +54,8 @@ def ground_reaction_force(m, d):
         c = d.contact[ci]
         b1 = int(m.geom_bodyid[c.geom1])
         b2 = int(m.geom_bodyid[c.geom2])
-        if b1 == 0 and b2 == 0:
-            continue
+        if (b1 == 0) == (b2 == 0):
+            continue  # 双 world 或模型自接触：不计入地面反作用力
         f6 = np.zeros(6)
         mujoco.mj_contactForce(m, d, ci, f6)
         fw = c.frame.reshape(3, 3).T @ f6[:3]
