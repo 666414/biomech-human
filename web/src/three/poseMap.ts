@@ -5,7 +5,8 @@
  *   - hinge：绕锚点 anchor（body 局部系）旋转，body 局部四元数按声明顺序右乘；
  *     锚点非零时同步补偿平移（p += R·c − (R⊗R_loc)·c）
  *   - slide：沿轴平移，轴向量被「此前累计旋转（含 q0）」变换（p += R·axis·q）
- *   - 多关节按 part.joints 声明顺序复合；四元数与 MuJoCo 同为 w,x,y,z。
+ *   - 多关节按 part.joints 声明顺序复合；MuJoCo xquat 为 wxyz 顺序，fixture 按此存储，
+ *     three 构造 Quaternion 时重排为 xyzw。
  *
  * glb 契约（P1 转换，已实测）：节点名 = body id；节点局部变换 = XML body pos/quat
  * （pelvis 自带绕 x +90° 建模约定 quat，原样保留不纠正）。

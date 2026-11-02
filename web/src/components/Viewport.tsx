@@ -161,10 +161,22 @@ export default function Viewport({ ref }: { ref?: Ref<ViewportHandle> }) {
     [],
   )
 
-  // 点击拾取
+  // 点击拾取（click 语义）：pointerdown 记录坐标，pointerup 位移 < 5px 才算点击，
+  // 避免 OrbitControls 拖拽视角的起始按下被误判为点击而误选/误清选部位
+  const pointerDownPosRef = useRef<{ x: number; y: number } | null>(null)
+
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    pointerDownPosRef.current = { x: e.clientX, y: e.clientY }
+  }
+
+  const onPointerUp = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const down = pointerDownPosRef.current
+    pointerDownPosRef.current = null
     const sm = smRef.current
-    if (!sm) return
+    if (!down || !sm) return
+    const dx = e.clientX - down.x
+    const dy = e.clientY - down.y
+    if (dx * dx + dy * dy >= 25) return // 位移 ≥ 5px，视为拖拽视角
     const rect = e.currentTarget.getBoundingClientRect()
     const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1
     const ndcY = -((e.clientY - rect.top) / rect.height) * 2 + 1
@@ -176,7 +188,12 @@ export default function Viewport({ ref }: { ref?: Ref<ViewportHandle> }) {
 
   return (
     <div className="viewport">
-      <canvas ref={canvasRef} className="viewport-canvas" onPointerDown={onPointerDown} />
+      <canvas
+        ref={canvasRef}
+        className="viewport-canvas"
+        onPointerDown={onPointerDown}
+        onPointerUp={onPointerUp}
+      />
       {!ready && !error && (
         <div className="viewport-overlay">
           {progress > 0 ? `模型加载中 ${progress}%` : '准备加载…'}

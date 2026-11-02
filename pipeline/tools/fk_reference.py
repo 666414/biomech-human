@@ -78,7 +78,7 @@ def compute_frame(model, data, scene: dict, t: float) -> dict:
             raise SystemExit(f"参考 body {name} 在模型中不存在")
         bodies[name] = {
             "pos": [round(float(v), 9) for v in data.xpos[bid]],
-            # MuJoCo xquat 顺序 w,x,y,z，与 three.js 一致
+            # MuJoCo xquat 为 wxyz 顺序，fixture 按此存储，three 构造 Quaternion 时重排为 xyzw
             "quat": [round(float(v), 9) for v in data.xquat[bid]],
         }
     return {"t": round(float(t), 6), "qpos36": [round(float(v), 9) for v in qpos_row], "bodies": bodies}

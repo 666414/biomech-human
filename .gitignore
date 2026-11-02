@@ -11,3 +11,4 @@ web/public/data/*
 # FK 对账参考真值（pipeline/tools/fk_reference.py 生成，7KB，供浏览器 ?fkcheck=1 对账）
 !web/public/data/fk-reference.json
 *.local
+.screenshots/
