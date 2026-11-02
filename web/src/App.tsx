@@ -1,23 +1,26 @@
 /**
- * P3 Task 3 临时外壳：加载 rigMeta + 默认场景（gait_cycle）+ Viewport + 时间轴。
- * 仅用于验证渲染引擎与姿态动画；T4 会替换为正式布局与回放控制组件。
+ * 应用外壳（板块 02）：ScenePicker + Viewport + Timeline 的组装与帧分发。
+ * 分发链路：store.t（唯一驱动源）→ usePlayback 采样帧 →
+ *   1. Viewport setPose（3D 姿态）
+ *   2. 03 图表游标（T5 接同一 frame：曲线/游标/读数）
+ *   3. 04 关键帧弹卡（T6 用 player/activeKeyframe 检查 frame.time）
+ * 反向联动：Timeline seek → store.t；Viewport 拾取 → store.selectPart。
  */
-import { useEffect } from 'react'
-import Viewport from './components/Viewport'
-import { loadRigMeta, SCENE_IDS } from './data'
+import { useEffect, useRef } from 'react'
+import ScenePicker from './components/ScenePicker'
+import Timeline from './components/Timeline'
+import Viewport, { type ViewportHandle } from './components/Viewport'
+import { loadRigMeta } from './data'
+import { usePlayback } from './player/usePlayback'
 import { useStore } from './store'
 import './App.css'
 
 function App() {
-  const sceneId = useStore((s) => s.sceneId)
-  const scene = useStore((s) => s.scene)
-  const t = useStore((s) => s.t)
-  const playing = useStore((s) => s.playing)
-  const seek = useStore((s) => s.seek)
-  const togglePlay = useStore((s) => s.togglePlay)
-  const setScene = useStore((s) => s.setScene)
+  const viewportRef = useRef<ViewportHandle>(null)
+  const frame = usePlayback()
   const selectedPartId = useStore((s) => s.selectedPartId)
   const rigMeta = useStore((s) => s.rigMeta)
+  const setScene = useStore((s) => s.setScene)
   const selectedZh = selectedPartId
     ? (rigMeta?.parts.find((p) => p.id === selectedPartId)?.names.zh ?? selectedPartId)
     : null
@@ -27,50 +30,32 @@ function App() {
       try {
         useStore.getState().setRigMeta(await loadRigMeta())
       } catch {
-        // rig 加载失败不阻塞渲染（FK 对账会提示），T4 再统一错误处理
+        // rig 加载失败不阻塞渲染（FK 对账会提示）
       }
     })()
   }, [])
 
   useEffect(() => {
-    // jsdom/离线环境无数据源会 reject，静默（T4 统一错误处理）
+    // jsdom/离线环境无数据源会 reject，静默（错误处理由 T7 统一）
     setScene('gait_cycle').catch(() => {})
   }, [setScene])
+
+  // 帧分发：t 变化 → Viewport setPose（charts/关键帧联动接同一 frame）
+  useEffect(() => {
+    if (frame) viewportRef.current?.setPose(frame.jointAngles)
+  }, [frame])
 
   return (
     <div className="app">
       <header className="app-header">
         <h1>人体运动可视化</h1>
-        <select value={sceneId ?? ''} onChange={(e) => void setScene(e.target.value)} aria-label="选择场景">
-          {SCENE_IDS.map((id) => (
-            <option key={id} value={id}>
-              {id}
-            </option>
-          ))}
-        </select>
+        <ScenePicker />
         <span className="part-badge">{selectedZh ? `${selectedZh}（${selectedPartId}）` : '未选中部位'}</span>
       </header>
 
-      <Viewport />
+      <Viewport ref={viewportRef} />
 
-      <footer className="app-timeline">
-        <button type="button" onClick={togglePlay} disabled={!scene}>
-          {playing ? '暂停' : '播放'}
-        </button>
-        <input
-          type="range"
-          min={0}
-          max={scene?.duration ?? 1}
-          step={0.01}
-          value={t}
-          disabled={!scene}
-          onChange={(e) => seek(Number(e.target.value))}
-          aria-label="时间轴"
-        />
-        <span className="time-label">
-          {t.toFixed(2)}s / {(scene?.duration ?? 0).toFixed(2)}s
-        </span>
-      </footer>
+      <Timeline />
     </div>
   )
 }

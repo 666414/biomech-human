@@ -1,13 +1,13 @@
 /**
- * 3D 视口组件（P3 Task 3）：挂载 SceneManager，桥接全局状态与渲染循环。
- * - 每帧（RAF）：读 store 的 t/scene → sampleSeries → setPose（同帧生效）
+ * 3D 视口组件（板块 01）：挂载 SceneManager，桥接全局状态与渲染循环。
+ * - 姿态由回放层（T4 usePlayback → App）经 ref 句柄 setPose 注入；渲染循环
+ *   只重放缓存位姿（模型晚于首帧加载完成时也能自愈到当前 t 的姿态）
  * - 点击 canvas：pickAt → selectPart；高亮跟随 selectedPartId
  * - 浮层：模型加载进度/重试、分层显示控件（骨骼/肌肉/皮肤）、选中部位信息
- * - 通过 ref 暴露 ViewportHandle（T4 布局层调用 focusPart/setView 等）
+ * - 通过 ref 暴露 ViewportHandle（布局层调用 focusPart/setView 等）
  * - ?fkcheck=1：运行时 FK 对账，结果打印到 console 并显示浮层
  */
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react'
-import { sampleSeries } from '../interp'
 import { useStore } from '../store'
 import type { JointAngles, PartGroup } from '../types'
 import { checkPoseMap, formatFkResult, loadFkReference } from '../three/fkCheck'
@@ -36,6 +36,8 @@ const LAYER_GROUPS: Array<{ group: PartGroup; label: string }> = [
 export default function Viewport({ ref }: { ref?: Ref<ViewportHandle> }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const smRef = useRef<SceneManager | null>(null)
+  /** 回放层最近一次注入的位姿（渲染循环每帧重放，模型加载完成自愈） */
+  const poseRef = useRef<JointAngles | null>(null)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [ready, setReady] = useState(false)
@@ -72,15 +74,9 @@ export default function Viewport({ ref }: { ref?: Ref<ViewportHandle> }) {
     }
     smRef.current = sm
 
-    // 渲染循环回调：每帧读 store（t 变更同帧生效）
+    // 渲染循环回调：只重放缓存位姿（注入走 ref 句柄，见 useImperativeHandle）
     sm.onFrame = (instance) => {
-      const st = useStore.getState()
-      const scene = st.scene
-      if (!scene) return
-      const row = sampleSeries(scene.series.time, scene.series.qpos, st.t)
-      const q: JointAngles = {}
-      for (let i = 0; i < scene.joints.length; i++) q[scene.joints[i]] = row[i]
-      instance.setPose(q)
+      if (poseRef.current) instance.setPose(poseRef.current)
     }
 
     const load = async () => {
@@ -150,7 +146,10 @@ export default function Viewport({ ref }: { ref?: Ref<ViewportHandle> }) {
   useImperativeHandle(
     ref,
     () => ({
-      setPose: (q) => smRef.current?.setPose(q),
+      setPose: (q) => {
+        poseRef.current = q
+        smRef.current?.setPose(q)
+      },
       focusPart: (partId) => smRef.current?.focusPart(partId),
       setView: (view) => smRef.current?.setView(view),
       setLayerVisible: (group, visible) =>

@@ -1,4 +1,5 @@
-/* P3 Task 3 临时外壳样式：仅布局验证用，T4 换正式设计 */
+/* P3 Task 3/4 样式：T7 统一视觉打磨 */
+
 .app {
   display: flex;
   flex-direction: column;
@@ -6,6 +7,68 @@
   gap: 8px;
   padding: 8px;
   box-sizing: border-box;
+}
+
+.app-timeline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.timeline-track {
+  position: relative;
+  flex: 1;
+  height: 14px;
+  border-radius: 7px;
+  background: #2a323a;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.timeline-fill {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: 7px;
+  background: #2b527a;
+  pointer-events: none;
+}
+
+.timeline-playhead {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  transform: translateX(-1px);
+  border-radius: 1px;
+  background: #eaf7fa;
+  pointer-events: none;
+}
+
+.timeline-marker {
+  position: absolute;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  padding: 0;
+  transform: translate(-50%, -50%);
+  border: 1px solid #0e1216;
+  border-radius: 50%;
+  background: #ffb545;
+  cursor: pointer;
+}
+
+.timeline-marker:hover {
+  transform: translate(-50%, -50%) scale(1.35);
+}
+
+.time-label {
+  min-width: 92px;
+  font-variant-numeric: tabular-nums;
+  color: #9ab;
+  font-size: 13px;
+  text-align: right;
 }
 
 .app-header {
@@ -145,19 +208,3 @@
   font-size: 11px;
 }
 
-.app-timeline {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.app-timeline input[type='range'] {
-  flex: 1;
-}
-
-.time-label {
-  min-width: 110px;
-  font-variant-numeric: tabular-nums;
-  color: #9ab;
-  font-size: 13px;
-}
