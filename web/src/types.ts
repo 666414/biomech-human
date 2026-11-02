@@ -18,6 +18,11 @@ export interface RigJoint {
   axis: [number, number, number]
   /** 活动范围：hinge 单位 rad，slide 单位 m */
   range: [number, number]
+  /**
+   * 关节锚点（body 局部系，MuJoCo joint pos 属性）。hinge 绕该点旋转；
+   * slide 不使用。缺省视为原点（旧版 rig-meta 无此字段）。
+   */
+  anchor?: [number, number, number]
 }
 
 /** 模型部件（骨架 / 肌肉 / 皮肤） */

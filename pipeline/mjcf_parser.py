@@ -10,6 +10,8 @@ class Joint:
     type: str
     axis: list = field(default_factory=lambda: [0.0, 0.0, 1.0])
     range: list | None = None
+    # 关节锚点（XML pos 属性，body 局部系）。hinge 绕该点旋转；slide 运动学不使用。
+    anchor: list = field(default_factory=lambda: [0.0, 0.0, 0.0])
 
 
 @dataclass
@@ -50,6 +52,7 @@ def _parse_body(el):
             type=j.get("type", "hinge"),
             axis=_floats(j.get("axis"), (0.0, 0.0, 1.0)),
             range=_floats(j.get("range"), None) if j.get("range") else None,
+            anchor=_floats(j.get("pos"), (0.0, 0.0, 0.0)),
         )
         for j in el.findall("joint")
     ]

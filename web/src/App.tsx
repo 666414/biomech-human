@@ -1,121 +1,77 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+/**
+ * P3 Task 3 临时外壳：加载 rigMeta + 默认场景（gait_cycle）+ Viewport + 时间轴。
+ * 仅用于验证渲染引擎与姿态动画；T4 会替换为正式布局与回放控制组件。
+ */
+import { useEffect } from 'react'
+import Viewport from './components/Viewport'
+import { loadRigMeta, SCENE_IDS } from './data'
+import { useStore } from './store'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+  const sceneId = useStore((s) => s.sceneId)
+  const scene = useStore((s) => s.scene)
+  const t = useStore((s) => s.t)
+  const playing = useStore((s) => s.playing)
+  const seek = useStore((s) => s.seek)
+  const togglePlay = useStore((s) => s.togglePlay)
+  const setScene = useStore((s) => s.setScene)
+  const selectedPartId = useStore((s) => s.selectedPartId)
+  const rigMeta = useStore((s) => s.rigMeta)
+  const selectedZh = selectedPartId
+    ? (rigMeta?.parts.find((p) => p.id === selectedPartId)?.names.zh ?? selectedPartId)
+    : null
+
+  useEffect(() => {
+    void (async () => {
+      try {
+        useStore.getState().setRigMeta(await loadRigMeta())
+      } catch {
+        // rig 加载失败不阻塞渲染（FK 对账会提示），T4 再统一错误处理
+      }
+    })()
+  }, [])
+
+  useEffect(() => {
+    // jsdom/离线环境无数据源会 reject，静默（T4 统一错误处理）
+    setScene('gait_cycle').catch(() => {})
+  }, [setScene])
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
+    <div className="app">
+      <header className="app-header">
+        <h1>人体运动可视化</h1>
+        <select value={sceneId ?? ''} onChange={(e) => void setScene(e.target.value)} aria-label="选择场景">
+          {SCENE_IDS.map((id) => (
+            <option key={id} value={id}>
+              {id}
+            </option>
+          ))}
+        </select>
+        <span className="part-badge">{selectedZh ? `${selectedZh}（${selectedPartId}）` : '未选中部位'}</span>
+      </header>
+
+      <Viewport />
+
+      <footer className="app-timeline">
+        <button type="button" onClick={togglePlay} disabled={!scene}>
+          {playing ? '暂停' : '播放'}
         </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+        <input
+          type="range"
+          min={0}
+          max={scene?.duration ?? 1}
+          step={0.01}
+          value={t}
+          disabled={!scene}
+          onChange={(e) => seek(Number(e.target.value))}
+          aria-label="时间轴"
+        />
+        <span className="time-label">
+          {t.toFixed(2)}s / {(scene?.duration ?? 0).toFixed(2)}s
+        </span>
+      </footer>
+    </div>
   )
 }
 

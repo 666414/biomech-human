@@ -1,0 +1,231 @@
+/**
+ * 3D 视口组件（P3 Task 3）：挂载 SceneManager，桥接全局状态与渲染循环。
+ * - 每帧（RAF）：读 store 的 t/scene → sampleSeries → setPose（同帧生效）
+ * - 点击 canvas：pickAt → selectPart；高亮跟随 selectedPartId
+ * - 浮层：模型加载进度/重试、分层显示控件（骨骼/肌肉/皮肤）、选中部位信息
+ * - 通过 ref 暴露 ViewportHandle（T4 布局层调用 focusPart/setView 等）
+ * - ?fkcheck=1：运行时 FK 对账，结果打印到 console 并显示浮层
+ */
+import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react'
+import { sampleSeries } from '../interp'
+import { useStore } from '../store'
+import type { JointAngles, PartGroup } from '../types'
+import { checkPoseMap, formatFkResult, loadFkReference } from '../three/fkCheck'
+import { SceneManager, type ViewPreset } from '../three/SceneManager'
+
+function isFkCheck(): boolean {
+  return new URLSearchParams(window.location.search).get('fkcheck') === '1'
+}
+
+/** 父层（T4 布局）通过 ref 调用的视口能力 */
+export interface ViewportHandle {
+  setPose: (q: JointAngles) => void
+  focusPart: (partId: string) => void
+  setView: (view: ViewPreset) => void
+  setLayerVisible: (group: PartGroup, visible: boolean) => void
+  setLayerOpacity: (group: PartGroup, v: number) => void
+  highlight: (partId: string | null) => void
+}
+
+const LAYER_GROUPS: Array<{ group: PartGroup; label: string }> = [
+  { group: 'skeleton', label: '骨骼' },
+  { group: 'muscle', label: '肌肉' },
+  { group: 'skin', label: '皮肤' },
+]
+
+export default function Viewport({ ref }: { ref?: Ref<ViewportHandle> }) {
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const smRef = useRef<SceneManager | null>(null)
+  const [progress, setProgress] = useState(0)
+  const [error, setError] = useState<string | null>(null)
+  const [ready, setReady] = useState(false)
+  const [fkText, setFkText] = useState<string | null>(null)
+  const [reloadNonce, setReloadNonce] = useState(0)
+  // 分层显示：可见性 + 不透明度（初始全部可见不透明）
+  const [layerVisible, setLayerVisible] = useState<Record<PartGroup, boolean>>({
+    skeleton: true,
+    muscle: true,
+    skin: true,
+  })
+  const [layerOpacity, setLayerOpacity] = useState<Record<PartGroup, number>>({
+    skeleton: 1,
+    muscle: 1,
+    skin: 1,
+  })
+
+  // 初始化 SceneManager + 加载模型（一次性；reloadNonce 变化时重建）
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+    let cancelled = false
+    let sm: SceneManager | null = null
+    setProgress(0)
+    setError(null)
+    setReady(false)
+
+    try {
+      sm = new SceneManager(canvas)
+    } catch (e) {
+      // jsdom / 无 WebGL 环境降级：显示占位文案，不阻塞应用
+      setError(`WebGL 初始化失败：${e instanceof Error ? e.message : String(e)}`)
+      return
+    }
+    smRef.current = sm
+
+    // 渲染循环回调：每帧读 store（t 变更同帧生效）
+    sm.onFrame = (instance) => {
+      const st = useStore.getState()
+      const scene = st.scene
+      if (!scene) return
+      const row = sampleSeries(scene.series.time, scene.series.qpos, st.t)
+      const q: JointAngles = {}
+      for (let i = 0; i < scene.joints.length; i++) q[scene.joints[i]] = row[i]
+      instance.setPose(q)
+    }
+
+    const load = async () => {
+      try {
+        await sm!.loadModel('/data/models/human.glb', (pct) => {
+          if (!cancelled) setProgress(pct)
+        })
+        if (cancelled) return
+        setReady(true)
+
+        if (isFkCheck()) {
+          const refJson = await loadFkReference()
+          if (cancelled || !sm) return
+          // 用 SceneManager 自己的 poseMap（rest = 模型静止位）；现场新建会
+          // 捕获到已被 RAF 回放摆姿势的变换，导致关节复合两次（实测踩坑）。
+          // rig 由 App 异步注入，这里等 poseMap 就绪（上限 10s）。
+          let pm = sm.poseMap
+          const deadline = Date.now() + 10000
+          while (!pm && Date.now() < deadline) {
+            await new Promise((r) => setTimeout(r, 100))
+            if (cancelled) return
+            pm = sm.poseMap
+          }
+          const result = pm ? checkPoseMap(pm, refJson) : null
+          if (result) {
+            const text = formatFkResult(result)
+            console.log(text)
+            setFkText(text)
+          }
+        }
+      } catch (e) {
+        if (!cancelled) setError(e instanceof Error ? e.message : String(e))
+      }
+    }
+    void load()
+
+    return () => {
+      cancelled = true
+      sm?.dispose()
+      smRef.current = null
+    }
+  }, [reloadNonce])
+
+  // rig 元数据到达后注入（App 已通过 store 加载）
+  const rigMeta = useStore((s) => s.rigMeta)
+  useEffect(() => {
+    if (rigMeta) smRef.current?.setRig(rigMeta)
+  }, [rigMeta])
+
+  // 高亮跟随选中状态
+  const selectedPartId = useStore((s) => s.selectedPartId)
+  useEffect(() => {
+    smRef.current?.highlight(selectedPartId)
+  }, [selectedPartId])
+
+  // 分层状态 → SceneManager（集中走 effect，避免控件渲染路径直接依赖实例）
+  useEffect(() => {
+    const sm = smRef.current
+    if (!sm) return
+    for (const { group } of LAYER_GROUPS) {
+      sm.setLayerVisible(group, layerVisible[group])
+      sm.setLayerOpacity(group, layerOpacity[group])
+    }
+  }, [layerVisible, layerOpacity, ready, rigMeta])
+
+  // 暴露给父层的类型化句柄
+  useImperativeHandle(
+    ref,
+    () => ({
+      setPose: (q) => smRef.current?.setPose(q),
+      focusPart: (partId) => smRef.current?.focusPart(partId),
+      setView: (view) => smRef.current?.setView(view),
+      setLayerVisible: (group, visible) =>
+        setLayerVisible((s) => ({ ...s, [group]: visible })),
+      setLayerOpacity: (group, v) => setLayerOpacity((s) => ({ ...s, [group]: v })),
+      highlight: (partId) => useStore.getState().selectPart(partId),
+    }),
+    [],
+  )
+
+  // 点击拾取
+  const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const sm = smRef.current
+    if (!sm) return
+    const rect = e.currentTarget.getBoundingClientRect()
+    const ndcX = ((e.clientX - rect.left) / rect.width) * 2 - 1
+    const ndcY = -((e.clientY - rect.top) / rect.height) * 2 + 1
+    useStore.getState().selectPart(sm.pickAt(ndcX, ndcY))
+  }
+
+  // 选中部位信息（经 SceneManager 查 rig-meta 中英文名）
+  const info = selectedPartId ? (smRef.current?.getSelectedInfo(selectedPartId) ?? null) : null
+
+  return (
+    <div className="viewport">
+      <canvas ref={canvasRef} className="viewport-canvas" onPointerDown={onPointerDown} />
+      {!ready && !error && (
+        <div className="viewport-overlay">
+          {progress > 0 ? `模型加载中 ${progress}%` : '准备加载…'}
+          <div className="progress-track">
+            <div className="progress-bar" style={{ width: `${progress}%` }} />
+          </div>
+        </div>
+      )}
+      {error && (
+        <div className="viewport-overlay">
+          <p>{error}</p>
+          <button type="button" onClick={() => setReloadNonce((n) => n + 1)}>
+            重试
+          </button>
+        </div>
+      )}
+      {ready && (
+        <div className="layer-panel">
+          {LAYER_GROUPS.map(({ group, label }) => (
+            <div key={group} className="layer-row">
+              <label>
+                <input
+                  type="checkbox"
+                  checked={layerVisible[group]}
+                  onChange={(e) => setLayerVisible((s) => ({ ...s, [group]: e.target.checked }))}
+                />
+                {label}
+              </label>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={layerOpacity[group]}
+                aria-label={`${label}不透明度`}
+                onChange={(e) => setLayerOpacity((s) => ({ ...s, [group]: Number(e.target.value) }))}
+              />
+            </div>
+          ))}
+        </div>
+      )}
+      {info && (
+        <div className="part-card">
+          <strong>{info.zh}</strong>
+          <span>{info.en}</span>
+          <span className="part-card-id">{info.id}</span>
+        </div>
+      )}
+      {fkText && <pre className="fk-panel">{fkText}</pre>}
+    </div>
+  )
+}

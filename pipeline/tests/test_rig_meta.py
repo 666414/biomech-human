@@ -49,6 +49,17 @@ def test_joint_metadata_from_xml():
     assert {"name", "type", "axis", "range"} <= set(j.keys())
 
 
+def test_joint_anchor_from_xml_pos():
+    # P3 FK 对账依赖：hinge 绕 anchor（XML pos 属性）旋转，膝关节锚点非零必须进 rig-meta
+    tree = parse_mjcf(LOCO)
+    meta = build_rig_meta(tree, zh_map={})
+    by_name = {j["name"]: j for p in meta["parts"] for j in p["joints"]}
+    knee = by_name["knee_angle_r"]
+    assert knee["anchor"] == [-0.00809, -0.003535, -0.001485]
+    hip = by_name["hip_flexion_r"]
+    assert hip["anchor"] == [0.0, 0.0, 0.0]
+
+
 def test_group_of_branches():
     # muscle/skin 分支不被 Locomotion 数据触发，直接单测锁定
     assert _group_of("muscle_thing") == "muscle"
