@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "sync-assets": "node scripts/sync-assets.mjs",
+    "validate:knowledge": "node scripts/validate-knowledge.mjs --knowledge ../content/knowledge --rigmeta public/data/models/rig-meta.json --scenes public/data/scenes",
     "preview": "vite preview"
   },
   "dependencies": {

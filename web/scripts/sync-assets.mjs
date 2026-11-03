@@ -4,6 +4,8 @@ import { copyFile, mkdir, readdir, stat } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { validateKnowledge } from './lib/validate-knowledge.mjs'
+import { loadKnowledgeCards, loadRigMetaParts, loadScenes, makeAssetsExist } from './lib/load-knowledge.mjs'
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const webRoot = path.resolve(scriptDir, '..')
@@ -43,6 +45,49 @@ async function syncJsonDir(srcDir, destDir) {
   return total
 }
 
+/**
+ * 知识目录校验 + 复制（P4 Task 1）：复制前先跑一致性校验，errors 非空 →
+ * 打印全部错误并 exit 1（sync 失败即构建失败，防脏数据上线）；
+ * knowledge 目录缺失时维持现状 skip。
+ */
+async function syncKnowledgeDir(srcDir, destDir) {
+  if (!existsSync(srcDir)) {
+    console.log(`[skip] ${path.relative(repoRoot, srcDir)} 不存在，跳过该目录`)
+    return 0
+  }
+  const rigMetaPath = path.join(publicData, 'models', 'rig-meta.json')
+  const scenesDir = path.join(publicData, 'scenes')
+  try {
+    const { cards, baseDir } = loadKnowledgeCards(srcDir)
+    const { ok, errors, warnings, stats } = validateKnowledge({
+      cards,
+      rigMetaParts: loadRigMetaParts(rigMetaPath),
+      scenes: loadScenes(scenesDir),
+      assetsExist: makeAssetsExist(baseDir),
+    })
+    for (const w of warnings) {
+      const where = [w.scene, w.cardId ? `卡 "${w.cardId}"` : `#${w.index ?? '?'}`].filter(Boolean).join(' ')
+      console.warn(`[warn] [${w.code}] ${where} ${w.message}`)
+    }
+    if (!ok) {
+      for (const e of errors) {
+        const where = [e.scene, e.cardId ? `卡 "${e.cardId}"` : `#${e.index ?? '?'}`].filter(Boolean).join(' ')
+        console.error(`[error] [${e.code}] ${where} ${e.message}`)
+      }
+      console.error(`\n[fail] 知识库校验失败（${errors.length} 个错误），中止同步`)
+      process.exit(1)
+    }
+    console.log(
+      `[ok]   知识库校验通过：${stats.cards} 张卡（部位 ${stats.partCards} / 关键帧 ${stats.keyframeCards} / ` +
+        `肌肉 ${stats.muscleCards} / 未关联 ${stats.unlinkedCards}），警告 ${warnings.length}`,
+    )
+  } catch (err) {
+    console.error(`[fail] 知识库数据加载失败：${err.message}`)
+    process.exit(1)
+  }
+  return syncJsonDir(srcDir, destDir)
+}
+
 let total = 0
 total += await syncFile(
   path.join(repoRoot, 'pipeline', 'out', 'fullbody', 'human.glb'),
@@ -58,7 +103,7 @@ total += await syncJsonDir(
   path.join(repoRoot, 'pipeline', 'out', 'scenes'),
   path.join(publicData, 'scenes'),
 )
-total += await syncJsonDir(
+total += await syncKnowledgeDir(
   path.join(repoRoot, 'content', 'knowledge'),
   path.join(publicData, 'knowledge'),
 )
