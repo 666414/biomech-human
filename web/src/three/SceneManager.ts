@@ -15,6 +15,10 @@ import { applyPose, buildPoseMap, type PoseMap } from './poseMap'
 const HIGHLIGHT_COLOR = 0x33ddff
 const GHOST_OPACITY = 0.15
 
+/** 模型加载失败自动重试（onError 任意原因，含网络偶发 ERR_ABORTED）：上限次数与延迟 */
+const MODEL_LOAD_MAX_RETRIES = 1
+const MODEL_LOAD_RETRY_DELAY_MS = 1500
+
 /** 高亮会话开始时记录的材质原始属性（恢复用） */
 interface MaterialSnapshot {
   material: THREE.MeshStandardMaterial
@@ -50,6 +54,8 @@ export class SceneManager {
   private rafId = 0
   private disposed = false
   private ro: ResizeObserver | null = null
+  /** 本次 loadModel 已自动重试次数（手动重试会整体重建实例，计数随之归零） */
+  private loadRetries = 0
 
   /** 渲染循环前回调（Viewport 借此每帧读 store → setPose，保证同帧生效） */
   onFrame: ((sm: SceneManager) => void) | null = null
@@ -113,8 +119,35 @@ export class SceneManager {
     this.tryBuildPoseMap()
   }
 
-  /** 加载 glb（未启用 Draco——模型未压缩，仅留接口） */
+  /**
+   * 加载 glb（未启用 Draco——模型未压缩，仅留接口）。
+   * 失败/中断（onError 任意原因）自动重试 MODEL_LOAD_MAX_RETRIES 次
+   * （间隔 MODEL_LOAD_RETRY_DELAY_MS，console.warn 记录），仍失败才 reject
+   * 进错误态；重试期间 onProgress 照常上报（进度从 0 重新计）。
+   */
   loadModel(url: string, onProgress?: (pct: number) => void): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const attempt = (): void => {
+        this.loadGltfOnce(url, onProgress).then(resolve, (err: Error) => {
+          if (this.disposed) return reject(err)
+          if (this.loadRetries >= MODEL_LOAD_MAX_RETRIES) return reject(err)
+          this.loadRetries += 1
+          console.warn(
+            `[SceneManager] 模型加载失败，${MODEL_LOAD_RETRY_DELAY_MS}ms 后自动重试（第 ${this.loadRetries}/${MODEL_LOAD_MAX_RETRIES} 次）：`,
+            err,
+          )
+          setTimeout(() => {
+            if (this.disposed) return reject(err)
+            attempt()
+          }, MODEL_LOAD_RETRY_DELAY_MS)
+        })
+      }
+      attempt()
+    })
+  }
+
+  /** 单次 glb 加载（loadModel 的重试编排单元） */
+  private loadGltfOnce(url: string, onProgress?: (pct: number) => void): Promise<void> {
     const loader = new GLTFLoader()
     const draco = new DRACOLoader() // 模型未 Draco 压缩，不解码器路径；保留扩展点
     draco.dispose()

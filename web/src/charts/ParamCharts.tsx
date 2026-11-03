@@ -32,6 +32,7 @@ import type { PlaybackFrame } from '../player/sampleFrame'
 import type { SceneData } from '../types'
 import { clampCursorX } from './cursor'
 import type { ChartSets, SeriesData } from './buildChartSets'
+import { shouldDeferInit } from './initGuard'
 import { lttb } from './lttb'
 
 registerChartModules([
@@ -282,42 +283,70 @@ export default function ParamCharts({ scene, sets, frame, onSeek, onSeriesClick 
   const onSeriesClickRef = useRef(onSeriesClick)
   const cursorTRef = useRef(0)
 
-  // 挂载：init + 交互事件（实例随宿主生命周期唯一，场景切换走 setOption 重建）
+  // 挂载：init + 交互事件（实例随宿主生命周期唯一，场景切换走 setOption 重建）。
+  // 零尺寸防御：宿主在布局链断裂/遮罩期可能 0×0，立即 init 会触发
+  // "Can't get DOM width or height" 告警且画布塌缩（RO 因尺寸不再变化无法补救），
+  // 故 shouldDeferInit 命中时推迟到 ResizeObserver 首次上报非零尺寸再 init。
   useEffect(() => {
     const host = hostRef.current
     if (!host) return
-    const chart = init(host)
-    chartRef.current = chart
+    let chart: EChartsType | null = null
+    // 首次 init 被零尺寸守卫推迟时置位：数据/游标 effect 已先行跳过，init 后需补渲染
+    let deferredInit = false
 
-    // 点击数据点 → 取 value[0]（原始帧时间）seek；seriesName 上抛供知识卡查卡
-    chart.on('click', (params: unknown) => {
-      const p = params as { value?: unknown; seriesName?: unknown }
-      if (typeof p.seriesName === 'string') onSeriesClickRef.current?.(p.seriesName)
-      const value = p.value
-      if (Array.isArray(value) && typeof value[0] === 'number') {
-        cursorTRef.current = value[0]
-        onSeekRef.current(value[0])
+    const bindEvents = (c: EChartsType) => {
+      // 点击数据点 → 取 value[0]（原始帧时间）seek；seriesName 上抛供知识卡查卡
+      c.on('click', (params: unknown) => {
+        const p = params as { value?: unknown; seriesName?: unknown }
+        if (typeof p.seriesName === 'string') onSeriesClickRef.current?.(p.seriesName)
+        const value = p.value
+        if (Array.isArray(value) && typeof value[0] === 'number') {
+          cursorTRef.current = value[0]
+          onSeekRef.current(value[0])
+        }
+      })
+
+      // 点击绘图区空白 → convertFromPixel 反查 t（点在系列/组件上时不重复触发）
+      c.getZr().on('click', (e: { target?: unknown; offsetX: number; offsetY: number }) => {
+        if (e.target) return
+        const t = c.convertFromPixel({ xAxisIndex: 0 }, e.offsetX)
+        if (typeof t !== 'number' || !Number.isFinite(t)) return
+        const range = c.convertToPixel({ xAxisIndex: 0 }, [0, durationRef.current])
+        if (!Array.isArray(range)) return
+        if (e.offsetX < range[0] - 4 || e.offsetX > range[1] + 4) return
+        if (e.offsetY > host.clientHeight - SLIDER_HEIGHT - 2) return // slider 区不 seek
+        const clamped = Math.min(Math.max(t, 0), durationRef.current)
+        cursorTRef.current = clamped
+        onSeekRef.current(clamped)
+      })
+
+      // dataZoom 拖动结束/进行中：重窗重渲，但不触发 seek（反向联动约束）
+      c.on('dataZoom', () => rewindow(c, setsRef.current))
+    }
+
+    const ensureInit = () => {
+      if (chart) return
+      if (shouldDeferInit(host.clientWidth, host.clientHeight)) {
+        deferredInit = true
+        return
       }
-    })
+      chart = init(host)
+      chartRef.current = chart
+      bindEvents(chart)
+      if (deferredInit) {
+        // 补整卡渲染与游标（挂载时 chart 为 null，数据/游标 effect 均被跳过）
+        chart.setOption(buildOption(setsRef.current, durationRef.current), true)
+        applyCursor(chart, cursorTRef.current, host.clientWidth, host.clientHeight)
+      }
+    }
 
-    // 点击绘图区空白 → convertFromPixel 反查 t（点在系列/组件上时不重复触发）
-    chart.getZr().on('click', (e: { target?: unknown; offsetX: number; offsetY: number }) => {
-      if (e.target) return
-      const t = chart.convertFromPixel({ xAxisIndex: 0 }, e.offsetX)
-      if (typeof t !== 'number' || !Number.isFinite(t)) return
-      const range = chart.convertToPixel({ xAxisIndex: 0 }, [0, durationRef.current])
-      if (!Array.isArray(range)) return
-      if (e.offsetX < range[0] - 4 || e.offsetX > range[1] + 4) return
-      if (e.offsetY > host.clientHeight - SLIDER_HEIGHT - 2) return // slider 区不 seek
-      const clamped = Math.min(Math.max(t, 0), durationRef.current)
-      cursorTRef.current = clamped
-      onSeekRef.current(clamped)
-    })
-
-    // dataZoom 拖动结束/进行中：重窗重渲，但不触发 seek（反向联动约束）
-    chart.on('dataZoom', () => rewindow(chart, setsRef.current))
+    ensureInit()
 
     const ro = new ResizeObserver(() => {
+      if (!chart) {
+        ensureInit() // 零尺寸 → 继续推迟；非零 → init 并补渲染
+        return
+      }
       chart.resize()
       applyCursor(chart, cursorTRef.current, host.clientWidth, host.clientHeight)
     })
@@ -325,7 +354,7 @@ export default function ParamCharts({ scene, sets, frame, onSeek, onSeriesClick 
 
     return () => {
       ro.disconnect()
-      chart.dispose()
+      chart?.dispose()
       chartRef.current = null
     }
   }, [])
@@ -355,11 +384,14 @@ export default function ParamCharts({ scene, sets, frame, onSeek, onSeriesClick 
     )
   }, [sets, scene.duration])
 
-  // 游标跟随 t：每次帧更新增量移动竖线（误差 ≤1 帧）
+  // 游标跟随 t：每次帧更新增量移动竖线（误差 ≤1 帧）。
+  // t 先记入 ref 再判 chart——init 被零尺寸守卫推迟期间帧照常流动，
+  // 延迟 init 补渲染时游标能直接落到最新 t（而非 0）。
   useEffect(() => {
-    const chart = chartRef.current
-    if (!frame || !chart) return
+    if (!frame) return
     cursorTRef.current = frame.time
+    const chart = chartRef.current
+    if (!chart) return
     applyCursor(
       chart,
       frame.time,

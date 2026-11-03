@@ -78,7 +78,8 @@ export default function Viewport({
   const [fkText, setFkText] = useState<string | null>(null)
   const [reloadNonce, setReloadNonce] = useState(0)
 
-  // 初始化 SceneManager + 加载模型（一次性；reloadNonce 变化时重建）。
+  // 初始化 SceneManager + 加载模型（一次性；reloadNonce 变化时重建，
+  // 重建即新实例 → 模型加载的自动重试计数随之重置，等效手动重试重置计数）。
   // 加载回调依赖为布局层经 useCallback 固化的稳定引用（setState 本身稳定），
   // 正常不触发重建；重建会销毁 WebGL 上下文，勿传入非稳定内联箭头。
   useEffect(() => {

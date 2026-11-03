@@ -165,8 +165,12 @@
 
 /* ---------- 曲线区 ---------- */
 
-/* 桌面：视口下方横排 */
+/* 桌面：视口下方横排。
+   display:flex 让 .charts-box 撑满固定高度——此前 section 为 block、
+   .charts-box 高度 auto、.charts-host 的 height:100% 解析为 0，
+   宿主 0 高导致 ECharts "Can't get DOM width or height" 且曲线不渲染 */
 .app-charts {
+  display: flex;
   height: clamp(300px, 40dvh, 540px);
   min-height: 0;
   padding: 0 10px;
@@ -179,11 +183,6 @@
   flex-direction: column;
   gap: 8px;
   min-height: 0;
-}
-
-.app-charts-tab .charts-box {
-  flex: 1;
-  min-height: 220px;
 }
 
 .app-charts-tab .readout-panel {
@@ -221,7 +220,12 @@
 
 .charts-box {
   position: relative;
+  /* 桌面 flex 行内撑满宽度 / 移动端曲线 Tab 列内撑满剩余高度 */
+  flex: 1;
+  width: 100%;
   min-width: 0;
+  /* 非零最小尺寸兜底：即使父级高度链再断裂，宿主也不会 0×0 init */
+  min-height: 260px;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 8px;
