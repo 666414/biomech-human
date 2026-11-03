@@ -1,4 +1,4 @@
-# 03 生物力学参数可视化（ECharts） `[状态: 设计已批准]`
+# 03 生物力学参数可视化（ECharts） `[P3 已实现]`
 
 ## 核心定位
 
@@ -44,3 +44,21 @@
 - 单场景 1~2MB 数据下，dataZoom 拖动不卡顿（中端手机实测）。
 - 游标与时间轴误差 ≤ 1 帧。
 - 读数与场景 JSON 原始值一致（抽查对账）。
+
+## 实现对齐 `[P3 已实现]`
+
+- 模块：`web/src/charts/ParamCharts.tsx`（单 ECharts 实例 4 grid 纵向堆叠：曲线/dataZoom/
+  graphic 游标/点击反向 seek/系列点击上抛）、`web/src/charts/buildChartSets.ts`（场景 JSON →
+  图表数据组装 + readAt 帧读数，教学子集过滤规则在此）、`web/src/charts/lttb.ts`（LTTB 降采样）、
+  `web/src/charts/cursor.ts`（游标 x 钳制）、`web/src/components/ReadoutPanel.tsx`（当前帧读数）
+- 关键实现决策：
+  - markLine 游标落为 graphic 竖线：单实例多 grid 布局下按 id 增量 setOption 移动，
+    逐帧与 t 同步（≤ 1 帧），避免整卡重建
+  - 教学子集双侧保 `_r` 规则：按模式命中关节后，有 `_r` 对应的 `_l` 剔除（`buildChartSets.ts`）；
+    MuJoCo 膝关节 `_translation/_rotation/_beta` 自由度排除
+  - LTTB 阈值 2000 点：当前场景数据（100~200 帧）不触发降采样，原样返回，保留供大数据扩展
+  - 读数面板与曲线共用 buildChartSets 换算口径（同一帧 sampleFrame），与场景 JSON 原值对账；
+    数值统一 1 位小数 + 单位标注（deg / N·m / N / %MVC）
+  - dataZoom（inside+slider）窗口变化按原始数据重窗降采样重渲；拖动 dataZoom 不触发反向 seek
+- 与设计的偏差：桌面布局为 3D 视口下方横排曲线区（非右侧面板纵向堆叠，随整体外壳布局）；
+  移动端为「曲线」Tab 内展示 + 可全屏展开

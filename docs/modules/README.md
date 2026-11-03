@@ -10,10 +10,10 @@
 | 编号 | 板块 | 文档 | 对应代码位置（实现后回填） |
 |---|---|---|---|
 | 00 | 系统总览与架构 | [00-overview.md](00-overview.md) | — |
-| 01 | 3D 渲染引擎 | [01-3d-render-engine.md](01-3d-render-engine.md) | `src/three/` |
-| 02 | 回放与交互控制 | [02-playback-interaction.md](02-playback-interaction.md) | `src/player/` |
-| 03 | 生物力学参数可视化 | [03-param-visualization.md](03-param-visualization.md) | `src/charts/` |
-| 04 | 知识点标注与讲解 | [04-knowledge-annotation.md](04-knowledge-annotation.md) | `src/knowledge/` |
+| 01 | 3D 渲染引擎 | [01-3d-render-engine.md](01-3d-render-engine.md) | `web/src/three/`、`web/src/components/Viewport.tsx` |
+| 02 | 回放与交互控制 | [02-playback-interaction.md](02-playback-interaction.md) | `web/src/player/`、`web/src/store.ts`、`web/src/components/Timeline.tsx`、`web/src/App.tsx` |
+| 03 | 生物力学参数可视化 | [03-param-visualization.md](03-param-visualization.md) | `web/src/charts/`、`web/src/components/ReadoutPanel.tsx` |
+| 04 | 知识点标注与讲解 | [04-knowledge-annotation.md](04-knowledge-annotation.md) | `web/src/knowledge/`、`web/src/data.ts`、`web/src/store.ts` |
 | 05 | 模型转换流水线 | [05-model-pipeline.md](05-model-pipeline.md) | `pipeline/` |
 | 06 | 仿真预计算流水线 | [06-simulation-pipeline.md](06-simulation-pipeline.md) | `pipeline/simulate_scene.py` |
 | 07 | 知识库内容管理 | [07-knowledge-base.md](07-knowledge-base.md) | `content/knowledge/` |

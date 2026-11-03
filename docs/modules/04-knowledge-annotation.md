@@ -1,4 +1,4 @@
-# 04 知识点标注与讲解 `[状态: 设计已批准]`
+# 04 知识点标注与讲解 `[P3 已实现]`
 
 ## 核心定位
 
@@ -55,3 +55,21 @@
 - 首批 5 场景 × ≥5 张 = ≥25 张知识卡，全部通过医学方向审核。
 - 三条触发路径 + 反向定位全部可用。
 - 修改 JSON 无需改代码即可生效（重新部署静态资源）。
+
+## 实现对齐 `[P3 已实现]`
+
+- 模块：`web/src/knowledge/KnowledgePanel.tsx`（卡片渲染：术语/解剖/力学/临床/引用/定位按钮）、
+  `web/src/knowledge/knowledge.ts`（checkKeyframeCard 关键帧弹卡判定与 findSeriesCard 查卡，纯函数）、
+  `web/src/data.ts`（loadKnowledge 容错加载 + indexKnowledge 索引）、
+  `web/src/store.ts`（activeCard/activeCardSource/activeKeyframeId 状态机）、
+  `web/src/App.tsx`（三条触发路径接线 + 拾取/关键帧/系列联动 effect）
+- 关键实现决策：
+  - 三条触发路径齐备：① 3D 拾取 → store.selectPart → 按 partId 弹卡；② 播放进入关键帧区间 →
+    checkKeyframeCard 区间去重（同区间不重复弹、离开不强制关）；③ 曲线系列点击 → 按
+    关节/肌肉 id 先 partId 后 cardId 查卡
+  - 反向定位：卡内「在模型中定位」→ focusPart 相机特写 + selectPart 高亮
+  - 知识索引唯一来源 store.knowledgeIndex（setKnowledge 时重建），App 层只读消费
+  - 部位拾取弹卡只在「选中变化」时覆盖当前卡：知识索引异步重建不误关正在展示的关键帧/系列卡
+- 与设计的偏差：内容为 stub（`web/public/data/knowledge/knowledge.json` 16 张，含 10 张关键帧卡 +
+  6 张部位卡，P4 补全并做医学方向审核）；note 字段承载 stub 标注（「P4 医学审核」提示）；
+  移动端形态落地为知识 Tab 内底部抽屉（≤900px），桌面为右侧栏卡片

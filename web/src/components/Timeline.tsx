@@ -1,6 +1,7 @@
 /**
  * 时间轴（板块 02）：t 的主要交互入口。
- * - 进度条：自绘 track + fill + playhead，点击/拖动 → store.seek
+ * - 进度条：自绘 track + fill + playhead，点击/拖动 → store.seek；
+ *   键盘可达（role=slider + tabIndex + ←/→ 逐帧步进 ±1/fps）
  * - 关键帧标记点：绝对定位小圆点，hover 显示 label，点击跳转到该 t
  * - 控制区：播放/暂停、逐帧 ±（±1/fps）、倍速选择、时间读数（1 位小数）
  */
@@ -66,10 +67,23 @@ export default function Timeline() {
         ref={trackRef}
         className="timeline-track"
         role="slider"
+        tabIndex={0}
         aria-label="时间轴"
+        aria-orientation="horizontal"
         aria-valuemin={0}
         aria-valuemax={scene.duration}
         aria-valuenow={t}
+        aria-valuetext={`${t.toFixed(1)} 秒`}
+        onKeyDown={(e) => {
+          // 键盘步进：←/→ 逐帧（±1/fps），与逐帧按钮一致
+          if (e.key === 'ArrowLeft') {
+            e.preventDefault()
+            seek(t - 1 / scene.fps)
+          } else if (e.key === 'ArrowRight') {
+            e.preventDefault()
+            seek(t + 1 / scene.fps)
+          }
+        }}
         onPointerDown={(e) => {
           draggingRef.current = true
           e.currentTarget.setPointerCapture(e.pointerId)

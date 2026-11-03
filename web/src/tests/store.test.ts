@@ -45,6 +45,7 @@ vi.mock('../data', () => {
 const initialState = {
   sceneId: null,
   scene: null,
+  sceneError: null,
   rigMeta: null,
   knowledge: [] as KnowledgeCard[],
   t: 0,
@@ -89,6 +90,26 @@ describe('setScene', () => {
     expect(s.t).toBe(0)
     expect(s.playing).toBe(false)
     expect(s.selectedPartId).toBeNull()
+  })
+})
+
+describe('setScene 失败与重试（T7）', () => {
+  it('加载失败写入 sceneError，scene 保持 null，不向调用方抛出', async () => {
+    vi.mocked(loadScene).mockRejectedValueOnce(new Error('加载 /data/scenes/gait_cycle.json 失败：HTTP 404'))
+    await expect(useStore.getState().setScene('gait_cycle')).resolves.toBeUndefined()
+    const s = useStore.getState()
+    expect(s.scene).toBeNull()
+    expect(s.sceneError).toContain('HTTP 404')
+  })
+
+  it('重试成功后 sceneError 清空且场景就位', async () => {
+    vi.mocked(loadScene).mockRejectedValueOnce(new Error('网络中断'))
+    await useStore.getState().setScene('gait_cycle')
+    expect(useStore.getState().sceneError).toBeTruthy()
+    await useStore.getState().setScene('gait_cycle')
+    const s = useStore.getState()
+    expect(s.sceneError).toBeNull()
+    expect(s.scene).not.toBeNull()
   })
 })
 

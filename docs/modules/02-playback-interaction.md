@@ -1,4 +1,4 @@
-# 02 回放与交互控制 `[状态: 设计已批准]`
+# 02 回放与交互控制 `[P3 已实现]`
 
 ## 核心定位
 
@@ -51,3 +51,22 @@
 - 拖动时间轴时三处联动响应 < 50ms。
 - 反向拖动（曲线 → 时间轴）同样准确。
 - 播放/暂停/慢速/关键帧跳转在 4 浏览器一致。
+
+## 实现对齐 `[P3 已实现]`
+
+- 模块：`web/src/player/usePlayback.ts`（RAF 播放循环 + 帧派生订阅）、
+  `web/src/player/sampleFrame.ts`（按 t 采样/插值出一帧）、
+  `web/src/player/activeKeyframe.ts`（关键帧区间检查）、`web/src/store.ts`（Zustand 单一驱动源：
+  sceneId/t/playing/playbackRate/selectedPartId + 场景加载与错误状态）、
+  `web/src/components/Timeline.tsx`（进度条/关键帧标记/逐帧 ±/倍速/键盘 ←→ 步进）、
+  `web/src/components/ScenePicker.tsx`（场景切换）、`web/src/App.tsx`（帧分发组合层与响应式外壳）
+- 关键实现决策：
+  - 播放循环体抽成 `createStepper().step(now)` 纯状态机（可单测）；MAX_STEP_DT（0.25s）尖峰钳制
+    为增强实现，防后台标签页 RAF 停摆恢复后 t 大步跳变
+  - 帧分发在 App 层组合：store.t 变化 → sampleFrame → ① Viewport setPose（ref 句柄）
+    ② ParamCharts 游标与读数（同一 PlaybackFrame）③ activeKeyframe 关键帧弹卡，三处同帧一致
+  - 反向联动统一走 store：Timeline seek / 曲线点击 onSeek / 部位拾取 selectPart
+  - 场景切换异步期间显示全屏 loading 遮罩，失败（store.sceneError）显示错误 + 重试；
+    键盘空格 = 播放/暂停（输入控件聚焦时让位原生行为）
+- 与设计的偏差：插值与分发不内嵌于播放模块内部，而由 App 层组合（见上）；
+  循环默认开启（loop=true，状态保留可配）

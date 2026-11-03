@@ -18,7 +18,7 @@ import {
   LegendComponent,
   TooltipComponent,
 } from 'echarts/components'
-import { init, use as useECharts, type ComposeOption, type EChartsType } from 'echarts/core'
+import { init, use as registerChartModules, type ComposeOption, type EChartsType } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import type { LineSeriesOption } from 'echarts/charts'
 import type {
@@ -34,7 +34,7 @@ import { clampCursorX } from './cursor'
 import type { ChartSets, SeriesData } from './buildChartSets'
 import { lttb } from './lttb'
 
-useECharts([
+registerChartModules([
   LineChart,
   GridComponent,
   DataZoomComponent,

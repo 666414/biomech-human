@@ -14,6 +14,8 @@ export interface AppState {
   /** 当前场景 id，未加载为 null */
   sceneId: string | null
   scene: SceneData | null
+  /** 场景数据加载失败信息（null 为无错误；重试成功或重新发起加载时清空） */
+  sceneError: string | null
   rigMeta: RigMeta | null
   knowledge: KnowledgeCard[]
   /** 知识卡索引（setKnowledge 时重建） */
@@ -58,6 +60,7 @@ export interface AppState {
 export const useStore = create<AppState>((set, get) => ({
   sceneId: null,
   scene: null,
+  sceneError: null,
   rigMeta: null,
   knowledge: [],
   knowledgeIndex: { byPartId: {}, byCardId: {} },
@@ -74,6 +77,7 @@ export const useStore = create<AppState>((set, get) => ({
     set({
       sceneId: id,
       scene: null,
+      sceneError: null,
       t: 0,
       playing: false,
       selectedPartId: null,
@@ -81,7 +85,17 @@ export const useStore = create<AppState>((set, get) => ({
       activeCardSource: null,
       activeKeyframeId: null,
     })
-    const scene = await loadScene(id)
+    let scene: SceneData
+    try {
+      scene = await loadScene(id)
+    } catch (e) {
+      // 加载失败不向调用方抛出：错误写入状态机，UI 显示错误 + 重试；
+      // 加载期间用户已切走则静默丢弃（该错误不属于当前场景）
+      if (get().sceneId === id) {
+        set({ sceneError: e instanceof Error ? e.message : String(e) })
+      }
+      return
+    }
     // 加载期间用户可能已切换到其它场景，丢弃过期结果
     if (get().sceneId !== id) return
     set({ scene })

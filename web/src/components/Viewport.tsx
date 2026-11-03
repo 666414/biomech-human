@@ -1,30 +1,49 @@
 /**
  * 3D 视口组件（板块 01）：挂载 SceneManager，桥接全局状态与渲染循环。
- * - 姿态由回放层（T4 usePlayback → App）经 ref 句柄 setPose 注入；渲染循环
+ * - 姿态由回放层（usePlayback → App）经 ref 句柄 setPose 注入；渲染循环
  *   只重放缓存位姿（模型晚于首帧加载完成时也能自愈到当前 t 的姿态）
  * - 点击 canvas：pickAt → selectPart；高亮跟随 selectedPartId
- * - 浮层：模型加载进度/重试、分层显示控件（骨骼/肌肉/皮肤）、选中部位信息
+ * - 分层显示控件（骨骼/肌肉/皮肤）由布局层（App 顶栏）持有状态，经 layers
+ *   prop 下发，本组件集中同步到 SceneManager.setLayerVisible/setLayerOpacity
+ * - 浮层：模型加载进度/重试、选中部位中英文名角标（拾取反馈）
  * - 通过 ref 暴露 ViewportHandle（布局层调用 focusPart/setView 等）
+ * - 加载进度/就绪/失败经 onProgress/onReady/onError 上报布局层（App 全屏加载态复用）
  * - ?fkcheck=1：运行时 FK 对账，结果打印到 console 并显示浮层
+ * - 降质预设（01 文档）：?quality=low|high 显式指定；?lite=1 等价 low
+ *   （关抗锯齿 + 像素比上限 1；阴影贴图未启用，见 SceneManager）；缺省自动——
+ *   小屏（宽 < 768）或 devicePixelRatio > 2.5 视为低端机 → low 档
  */
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react'
 import { useStore } from '../store'
 import type { JointAngles, PartGroup } from '../types'
 import { checkPoseMap, formatFkResult, loadFkReference } from '../three/fkCheck'
-import { SceneManager, type ViewPreset } from '../three/SceneManager'
+import { SceneManager, type Quality, type ViewPreset } from '../three/SceneManager'
 
 function isFkCheck(): boolean {
   return new URLSearchParams(window.location.search).get('fkcheck') === '1'
 }
 
-/** 父层（T4 布局）通过 ref 调用的视口能力 */
+/** 降质档位判定：?lite=1 / ?quality= 查询参数优先，缺省按视口宽 / DPR 自动 */
+function detectQuality(): Quality {
+  const params = new URLSearchParams(window.location.search)
+  if (params.get('lite') === '1') return 'low'
+  const q = params.get('quality')
+  if (q === 'low' || q === 'high') return q
+  return window.innerWidth < 768 || window.devicePixelRatio > 2.5 ? 'low' : 'high'
+}
+
+/** 父层（布局）通过 ref 调用的视口能力 */
 export interface ViewportHandle {
   setPose: (q: JointAngles) => void
   focusPart: (partId: string) => void
   setView: (view: ViewPreset) => void
-  setLayerVisible: (group: PartGroup, visible: boolean) => void
-  setLayerOpacity: (group: PartGroup, v: number) => void
   highlight: (partId: string | null) => void
+}
+
+/** 分层显示状态（App 顶栏控件持有，经 prop 下发） */
+export interface LayerState {
+  visible: Record<PartGroup, boolean>
+  opacity: Record<PartGroup, number>
 }
 
 const LAYER_GROUPS: Array<{ group: PartGroup; label: string }> = [
@@ -33,7 +52,22 @@ const LAYER_GROUPS: Array<{ group: PartGroup; label: string }> = [
   { group: 'skin', label: '皮肤' },
 ]
 
-export default function Viewport({ ref }: { ref?: Ref<ViewportHandle> }) {
+export default function Viewport({
+  ref,
+  layers,
+  onProgress,
+  onReady,
+  onError,
+}: {
+  ref?: Ref<ViewportHandle>
+  layers: LayerState
+  /** 模型加载进度上报（App 全屏加载态的进度条复用同一回调） */
+  onProgress?: (pct: number) => void
+  /** 模型就绪上报 */
+  onReady?: () => void
+  /** 模型加载 / WebGL 初始化失败上报（App 据此收起全屏加载态，错误浮层留在视口内） */
+  onError?: () => void
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const smRef = useRef<SceneManager | null>(null)
   /** 回放层最近一次注入的位姿（渲染循环每帧重放，模型加载完成自愈） */
@@ -43,19 +77,10 @@ export default function Viewport({ ref }: { ref?: Ref<ViewportHandle> }) {
   const [ready, setReady] = useState(false)
   const [fkText, setFkText] = useState<string | null>(null)
   const [reloadNonce, setReloadNonce] = useState(0)
-  // 分层显示：可见性 + 不透明度（初始全部可见不透明）
-  const [layerVisible, setLayerVisible] = useState<Record<PartGroup, boolean>>({
-    skeleton: true,
-    muscle: true,
-    skin: true,
-  })
-  const [layerOpacity, setLayerOpacity] = useState<Record<PartGroup, number>>({
-    skeleton: 1,
-    muscle: 1,
-    skin: 1,
-  })
 
-  // 初始化 SceneManager + 加载模型（一次性；reloadNonce 变化时重建）
+  // 初始化 SceneManager + 加载模型（一次性；reloadNonce 变化时重建）。
+  // 加载回调依赖为布局层经 useCallback 固化的稳定引用（setState 本身稳定），
+  // 正常不触发重建；重建会销毁 WebGL 上下文，勿传入非稳定内联箭头。
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -66,10 +91,11 @@ export default function Viewport({ ref }: { ref?: Ref<ViewportHandle> }) {
     setReady(false)
 
     try {
-      sm = new SceneManager(canvas)
+      sm = new SceneManager(canvas, detectQuality())
     } catch (e) {
       // jsdom / 无 WebGL 环境降级：显示占位文案，不阻塞应用
       setError(`WebGL 初始化失败：${e instanceof Error ? e.message : String(e)}`)
+      onError?.()
       return
     }
     smRef.current = sm
@@ -83,9 +109,11 @@ export default function Viewport({ ref }: { ref?: Ref<ViewportHandle> }) {
       try {
         await sm!.loadModel('/data/models/human.glb', (pct) => {
           if (!cancelled) setProgress(pct)
+          onProgress?.(pct)
         })
         if (cancelled) return
         setReady(true)
+        onReady?.()
 
         if (isFkCheck()) {
           const refJson = await loadFkReference()
@@ -108,7 +136,10 @@ export default function Viewport({ ref }: { ref?: Ref<ViewportHandle> }) {
           }
         }
       } catch (e) {
-        if (!cancelled) setError(e instanceof Error ? e.message : String(e))
+        if (!cancelled) {
+          setError(e instanceof Error ? e.message : String(e))
+          onError?.()
+        }
       }
     }
     void load()
@@ -118,7 +149,7 @@ export default function Viewport({ ref }: { ref?: Ref<ViewportHandle> }) {
       sm?.dispose()
       smRef.current = null
     }
-  }, [reloadNonce])
+  }, [reloadNonce, onProgress, onReady, onError])
 
   // rig 元数据到达后注入（App 已通过 store 加载）
   const rigMeta = useStore((s) => s.rigMeta)
@@ -137,10 +168,10 @@ export default function Viewport({ ref }: { ref?: Ref<ViewportHandle> }) {
     const sm = smRef.current
     if (!sm) return
     for (const { group } of LAYER_GROUPS) {
-      sm.setLayerVisible(group, layerVisible[group])
-      sm.setLayerOpacity(group, layerOpacity[group])
+      sm.setLayerVisible(group, layers.visible[group])
+      sm.setLayerOpacity(group, layers.opacity[group])
     }
-  }, [layerVisible, layerOpacity, ready, rigMeta])
+  }, [layers, ready, rigMeta])
 
   // 暴露给父层的类型化句柄
   useImperativeHandle(
@@ -152,9 +183,6 @@ export default function Viewport({ ref }: { ref?: Ref<ViewportHandle> }) {
       },
       focusPart: (partId) => smRef.current?.focusPart(partId),
       setView: (view) => smRef.current?.setView(view),
-      setLayerVisible: (group, visible) =>
-        setLayerVisible((s) => ({ ...s, [group]: visible })),
-      setLayerOpacity: (group, v) => setLayerOpacity((s) => ({ ...s, [group]: v })),
       highlight: (partId) => useStore.getState().selectPart(partId),
     }),
     [],
@@ -207,31 +235,6 @@ export default function Viewport({ ref }: { ref?: Ref<ViewportHandle> }) {
           <button type="button" onClick={() => setReloadNonce((n) => n + 1)}>
             重试
           </button>
-        </div>
-      )}
-      {ready && (
-        <div className="layer-panel">
-          {LAYER_GROUPS.map(({ group, label }) => (
-            <div key={group} className="layer-row">
-              <label>
-                <input
-                  type="checkbox"
-                  checked={layerVisible[group]}
-                  onChange={(e) => setLayerVisible((s) => ({ ...s, [group]: e.target.checked }))}
-                />
-                {label}
-              </label>
-              <input
-                type="range"
-                min={0}
-                max={1}
-                step={0.05}
-                value={layerOpacity[group]}
-                aria-label={`${label}不透明度`}
-                onChange={(e) => setLayerOpacity((s) => ({ ...s, [group]: Number(e.target.value) }))}
-              />
-            </div>
-          ))}
         </div>
       )}
       {info && (

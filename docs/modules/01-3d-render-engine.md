@@ -1,4 +1,4 @@
-# 01 3D 渲染引擎（Three.js + glTF） `[状态: 设计已批准]`
+# 01 3D 渲染引擎（Three.js + glTF） `[P3 已实现]`
 
 ## 核心定位
 
@@ -49,3 +49,22 @@
 - 部位点击返回正确中英文部位名（与 rig-meta 一致）。
 - Draco 压缩后模型 < 8MB；低端机降质预设生效。
 - 4 大浏览器 + 手机/平板/桌面真机交互正常。
+
+## 实现对齐 `[P3 已实现]`
+
+- 模块：`web/src/three/SceneManager.ts`（渲染器/相机/拾取高亮/分层显隐透明度/视角预设/画质档位）、
+  `web/src/three/poseMap.ts`（节点映射与姿态写入）、`web/src/three/glbNodes.ts`（glb 节点巡检工具）、
+  `web/src/three/fkCheck.ts`（运行时 FK 对账）、`web/src/components/Viewport.tsx`（React 桥接：
+  加载进度/错误重试/拾取 click 语义/降质档判定/对外 ref 句柄）
+- 关键实现决策：
+  - 姿态驱动以 MuJoCo FK 对账 fixture 锁定（`web/src/tests/poseMap.test.ts`，位置误差 1e-7 m 级）；
+    `?fkcheck=1` 运行时用 `public/data/fk-reference.json` 复核并打印结果
+  - 关节锚点（anchor）平移补偿扩展进了 `pipeline/mjcf_parser.py` 与 `rig-meta.json`（P3 新增字段）：
+    body 原点 ≠ 关节旋转轴（如膝关节 XML pos 非零）时，先平移回锚点再旋转，保证与 MuJoCo FK 一致
+  - 材质加载时去共享（逐 mesh clone），高亮/分层透明度互不影响
+  - 降质档位：high 档 pixelRatio ≤ 1.5，low 档关抗锯齿（上下文创建时生效）+ pixelRatio 1；
+    `?quality=low|high` 显式指定，`?lite=1` 等价 low，缺省按视口宽 < 768 或 DPR > 2.5 自动判低
+  - 拾取用 click 语义（pointerdown/up 位移 < 5px），避免 OrbitControls 拖拽视角误触部位选择
+- 与设计的偏差：Draco 未启用（P1 产出未压缩 glb，压缩列入 P5）；场景未启用阴影贴图
+  （光照为环境光 + 方向光，无阴影系统，「低端关阴影」缺省满足）；视角预设落地为
+  正面/侧面/复位三档（复位 = 初始机位），重点部位特写由知识卡「在模型中定位」承担

@@ -25,7 +25,11 @@ interface MaterialSnapshot {
   depthWrite: boolean
 }
 
-export type ViewPreset = 'front' | 'side'
+/** 视角预设：front=正面 / side=侧面 / reset=复位（初始机位） */
+export type ViewPreset = 'front' | 'side' | 'reset'
+
+/** 画质档位（01 文档降质预设）：low 关抗锯齿 + 像素比上限 1 */
+export type Quality = 'low' | 'high'
 
 export class SceneManager {
   readonly scene: THREE.Scene
@@ -61,11 +65,14 @@ export class SceneManager {
   }
 
   private readonly canvas: HTMLCanvasElement
+  private quality: Quality
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(canvas: HTMLCanvasElement, quality: Quality = 'high') {
     this.canvas = canvas
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true })
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5))
+    this.quality = quality
+    // 抗锯齿是 WebGL 上下文属性，仅在创建时生效：low 档在此关闭
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: quality === 'high' })
+    this.renderer.setPixelRatio(this.targetPixelRatio())
 
     this.scene = new THREE.Scene()
     this.scene.background = new THREE.Color(0x101418)
@@ -159,6 +166,20 @@ export class SceneManager {
         }
       }
     })
+  }
+
+  // ---------- 画质（01 文档降质预设） ----------
+
+  /** 各档位像素比上限：high 1.5，low 1（低端机降采样保帧率） */
+  private targetPixelRatio(): number {
+    return this.quality === 'low' ? 1 : Math.min(window.devicePixelRatio, 1.5)
+  }
+
+  /** 运行期切换画质档（重设像素比；抗锯齿受限于创建时的上下文属性，low 建档才生效） */
+  setQuality(q: Quality): void {
+    if (q === this.quality) return
+    this.quality = q
+    this.renderer.setPixelRatio(this.targetPixelRatio())
   }
 
   // ---------- 姿态 ----------
@@ -281,14 +302,15 @@ export class SceneManager {
     return { id: part.id, zh: part.names.zh, en: part.names.en, group: part.group }
   }
 
-  /** 视角预设：模型面向 +x（步态前进方向）。front=正面(x+)，side=侧面(y+) */
+  /** 视角预设：模型面向 +x（步态前进方向）。front=正面(x+)，side=侧面(y+)，reset=初始机位 */
   setView(view: ViewPreset): void {
     const d = 3.2
-    const z = 1.0
     if (view === 'front') {
-      this.camera.position.set(d, 0, z)
+      this.camera.position.set(d, 0, 1.0)
+    } else if (view === 'side') {
+      this.camera.position.set(0, d, 1.0)
     } else {
-      this.camera.position.set(0, d, z)
+      this.camera.position.set(3.2, 0.4, 1.1) // 与构造函数一致的初始机位
     }
     this.controls.target.set(0, 0, 0.95)
     this.controls.update()

@@ -1,18 +1,396 @@
-/* P3 Task 3/4 样式：T7 统一视觉打磨 */
+/* ============================================================
+   应用外壳样式（P3 Task 7）：暗色主题 + 桌面/移动端响应式布局
+   桌面：顶栏 / 左 3D 视口 + 右侧栏（读数+知识）/ 曲线横排 / 底部时间轴
+   移动端（≤900px）：Tab 切换（3D/曲线/知识），时间轴常驻，知识卡底部抽屉
+   ============================================================ */
+
+/* ---------- 外壳 ---------- */
 
 .app {
   display: flex;
   flex-direction: column;
-  height: 100dvh;
-  gap: 8px;
-  padding: 8px;
-  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
 }
+
+.app-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-header h1 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #eaf2f8;
+  white-space: nowrap;
+}
+
+.app-header select {
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+}
+
+/* 视角预设（顶栏）：正面 / 侧面 / 复位，接 SceneManager.setView */
+.view-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.view-controls button {
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.view-controls button:hover {
+  border-color: var(--accent);
+  color: #eaf7fa;
+}
+
+/* 分层显示控件（顶栏）：显隐开关 + 不透明度滑杆 */
+.layer-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  margin-left: auto;
+}
+
+.layer-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.layer-item input[type='checkbox'],
+.layer-item input[type='range'] {
+  accent-color: var(--accent);
+}
+
+.layer-item input[type='range'] {
+  width: 72px;
+}
+
+/* ---------- 移动端 Tab（仅 ≤900px 渲染） ---------- */
+
+.app-tabs {
+  display: flex;
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+}
+
+.app-tabs button {
+  flex: 1;
+  padding: 9px 0;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.app-tabs button[aria-selected='true'] {
+  border-bottom-color: var(--accent);
+  color: #eaf7fa;
+}
+
+/* ---------- 主区 ---------- */
+
+.app-main {
+  display: flex;
+  flex: 1;
+  gap: 10px;
+  min-height: 0;
+  padding: 10px;
+}
+
+.vp-slot {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* 移动端切 Tab 时隐藏而非卸载（保住 WebGL 上下文与已加载模型） */
+.vp-slot.slot-hidden {
+  display: none;
+}
+
+/* ---------- 右侧栏（桌面）：读数 + 知识卡 ---------- */
+
+.app-side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 250px;
+  flex-shrink: 0;
+  min-height: 0;
+}
+
+.side-placeholder {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.app-side .readout-panel,
+.app-side .knowledge-panel {
+  flex: 1 1 50%;
+  width: auto;
+  min-height: 0;
+  max-height: none;
+}
+
+/* ---------- 曲线区 ---------- */
+
+/* 桌面：视口下方横排 */
+.app-charts {
+  height: clamp(300px, 40dvh, 540px);
+  min-height: 0;
+  padding: 0 10px;
+}
+
+/* 移动端：曲线 Tab（可全屏展开） */
+.app-charts-tab {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.app-charts-tab .charts-box {
+  flex: 1;
+  min-height: 220px;
+}
+
+.app-charts-tab .readout-panel {
+  flex-shrink: 0;
+  max-height: 32dvh;
+}
+
+.app-charts-tab.expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  padding: 10px;
+  background: var(--bg);
+}
+
+.app-charts-tab.expanded .charts-box {
+  min-height: 0;
+}
+
+.charts-expand {
+  align-self: flex-end;
+  padding: 4px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.charts-expand:hover {
+  border-color: var(--accent);
+  color: #eaf7fa;
+}
+
+.charts-box {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(12, 16, 20, 0.5);
+}
+
+.charts-host {
+  width: 100%;
+  height: 100%;
+}
+
+.charts-placeholder {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+/* ---------- 3D 视口 ---------- */
+
+.viewport {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #101418;
+}
+
+.viewport-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
+
+.viewport-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(16, 20, 24, 0.72);
+  color: #cde;
+  font-size: 14px;
+}
+
+.viewport-overlay button {
+  padding: 4px 16px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+}
+
+/* ---------- 全屏加载态（App 级）：首次加载 + 场景切换遮罩 + 失败重试 ---------- */
+
+.app-boot {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: rgba(14, 18, 22, 0.94);
+  color: #cde;
+  font-size: 14px;
+}
+
+.app-boot .progress-track {
+  width: 260px;
+}
+
+.app-boot button {
+  padding: 4px 20px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.app-boot button:hover {
+  border-color: var(--accent);
+  color: #eaf7fa;
+}
+
+.progress-track {
+  width: 240px;
+  height: 6px;
+  border-radius: 3px;
+  background: #2a323a;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: #33ddff;
+  transition: width 0.15s ease;
+}
+
+.fk-panel {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #dfe;
+  background: rgba(10, 14, 18, 0.82);
+  border: 1px solid #345;
+  border-radius: 6px;
+  white-space: pre;
+  pointer-events: none;
+}
+
+/* 选中部位中英文名角标（拾取反馈，轻量提示层） */
+.part-card {
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 12px;
+  background: rgba(10, 14, 18, 0.82);
+  border: 1px solid #2a5a66;
+  border-radius: 6px;
+  color: #eaf7fa;
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.part-card strong {
+  font-size: 14px;
+}
+
+.part-card span {
+  color: #9fc9d4;
+  font-size: 11px;
+}
+
+/* ---------- 时间轴（桌面/移动端常驻底部） ---------- */
 
 .app-timeline {
   display: flex;
   align-items: center;
   gap: 10px;
+  padding: 8px 10px 10px;
+}
+
+.app-timeline button,
+.app-timeline select {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
 }
 
 .timeline-track {
@@ -23,6 +401,11 @@
   background: #2a323a;
   cursor: pointer;
   touch-action: none;
+}
+
+.timeline-track:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .timeline-fill {
@@ -66,188 +449,18 @@
 .time-label {
   min-width: 92px;
   font-variant-numeric: tabular-nums;
-  color: #9ab;
+  color: var(--muted);
   font-size: 13px;
   text-align: right;
 }
 
-.app-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.app-header h1 {
-  font-size: 18px;
-  margin: 0;
-}
-
-.part-badge {
-  margin-left: auto;
-  padding: 2px 10px;
-  border: 1px solid #445;
-  border-radius: 999px;
-  font-size: 13px;
-  color: #9ab;
-}
-
-.viewport {
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  border: 1px solid #333;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.viewport-canvas {
-  width: 100%;
-  height: 100%;
-  display: block;
-  touch-action: none;
-}
-
-.viewport-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  background: rgba(16, 20, 24, 0.72);
-  color: #cde;
-  font-size: 14px;
-}
-
-.progress-track {
-  width: 240px;
-  height: 6px;
-  border-radius: 3px;
-  background: #2a323a;
-  overflow: hidden;
-}
-
-.progress-bar {
-  height: 100%;
-  background: #33ddff;
-  transition: width 0.15s ease;
-}
-
-.fk-panel {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  margin: 0;
-  padding: 8px 12px;
-  font-size: 12px;
-  line-height: 1.5;
-  color: #dfe;
-  background: rgba(10, 14, 18, 0.82);
-  border: 1px solid #345;
-  border-radius: 6px;
-  white-space: pre;
-  pointer-events: none;
-}
-
-.layer-panel {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 10px 12px;
-  background: rgba(10, 14, 18, 0.82);
-  border: 1px solid #345;
-  border-radius: 6px;
-  color: #cde;
-  font-size: 13px;
-}
-
-.layer-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.layer-row label {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  min-width: 52px;
-  cursor: pointer;
-}
-
-.layer-row input[type='range'] {
-  width: 90px;
-}
-
-.part-card {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 8px 12px;
-  background: rgba(10, 14, 18, 0.82);
-  border: 1px solid #2a5a66;
-  border-radius: 6px;
-  color: #eaf7fa;
-  font-size: 13px;
-  pointer-events: none;
-}
-
-.part-card strong {
-  font-size: 15px;
-}
-
-.part-card-id {
-  color: #7aa;
-  font-size: 11px;
-}
-
-/* P3 Task 5 样式：参数图表 + 读数面板（可堆叠 flex，响应式外壳由 T7 统一打磨） */
-
-.app-charts {
-  display: flex;
-  gap: 8px;
-  height: clamp(360px, 52dvh, 600px);
-  min-height: 0;
-}
-
-.app-charts-placeholder {
-  align-items: center;
-  justify-content: center;
-  border: 1px dashed #333;
-  border-radius: 8px;
-  color: #789;
-  font-size: 14px;
-}
-
-.charts-box {
-  position: relative;
-  flex: 1;
-  min-width: 0;
-  border: 1px solid #333;
-  border-radius: 8px;
-  overflow: hidden;
-  background: rgba(12, 16, 20, 0.5);
-}
-
-.charts-host {
-  width: 100%;
-  height: 100%;
-}
+/* ---------- 读数面板 ---------- */
 
 .readout-panel {
-  flex-shrink: 0;
-  width: 250px;
   margin: 0;
   padding: 8px 10px;
   overflow-y: auto;
-  border: 1px solid #333;
+  border: 1px solid var(--border);
   border-radius: 8px;
   background: rgba(12, 16, 20, 0.5);
   font-size: 12px;
@@ -257,7 +470,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #789;
+  color: var(--muted);
 }
 
 .readout-group h3 {
@@ -265,7 +478,7 @@
   padding-bottom: 2px;
   border-bottom: 1px solid #2a323a;
   font-size: 12px;
-  color: #9ab;
+  color: var(--muted);
 }
 
 .readout-group ul {
@@ -284,7 +497,7 @@
 
 .readout-name {
   overflow: hidden;
-  color: #9ab;
+  color: var(--muted);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -301,20 +514,9 @@
   font-style: normal;
 }
 
-/* P3 Task 6 样式：知识卡面板（桌面与读数面板同列；移动端抽屉由 T7 统一打磨） */
-
-.app-side {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  width: 250px;
-  flex-shrink: 0;
-  min-height: 0;
-}
+/* ---------- 知识卡 ---------- */
 
 .knowledge-panel {
-  flex-shrink: 0;
-  max-height: 58%;
   padding: 10px 12px;
   overflow-y: auto;
   border: 1px solid #2a5a66;
@@ -330,8 +532,8 @@
   justify-content: center;
   min-height: 44px;
   border-style: dashed;
-  border-color: #333;
-  color: #789;
+  border-color: var(--border);
+  color: var(--muted);
 }
 
 .knowledge-head {
@@ -362,7 +564,7 @@
   border: none;
   border-radius: 4px;
   background: transparent;
-  color: #9ab;
+  color: var(--muted);
   font-size: 16px;
   line-height: 1.2;
   cursor: pointer;
@@ -401,7 +603,7 @@
   margin-bottom: 2px;
   padding-bottom: 2px;
   border-bottom: 1px solid #2a323a;
-  color: #9ab;
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -445,21 +647,36 @@
   background: rgba(51, 221, 255, 0.18);
 }
 
-/* 移动端抽屉形态（组件级预留；全局响应式外壳由 T7 打磨） */
-@media (max-width: 768px) {
-  .knowledge-panel {
+/* ---------- 移动端微调 ---------- */
+
+@media (max-width: 900px) {
+  .app-main {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .app-charts {
+    padding: 0 8px;
+  }
+
+  .layer-item input[type='range'] {
+    width: 56px;
+  }
+
+  .part-card {
+    max-width: calc(100% - 20px);
+  }
+
+  /* 知识 Tab：知识卡为底部抽屉（空态占位不上浮） */
+  .app-main > .knowledge-panel:not(.knowledge-panel-empty) {
     position: fixed;
-    left: 0;
     right: 0;
     bottom: 0;
-    z-index: 30;
+    left: 0;
+    z-index: 55;
     max-height: 60dvh;
     border-radius: 12px 12px 0 0;
-  }
-
-  .knowledge-panel-empty {
-    position: static;
-    max-height: none;
+    border-bottom: none;
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.45);
   }
 }
-
