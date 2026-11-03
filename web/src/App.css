@@ -208,3 +208,96 @@
   font-size: 11px;
 }
 
+/* P3 Task 5 样式：参数图表 + 读数面板（可堆叠 flex，响应式外壳由 T7 统一打磨） */
+
+.app-charts {
+  display: flex;
+  gap: 8px;
+  height: clamp(360px, 52dvh, 600px);
+  min-height: 0;
+}
+
+.app-charts-placeholder {
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #333;
+  border-radius: 8px;
+  color: #789;
+  font-size: 14px;
+}
+
+.charts-box {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  border: 1px solid #333;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(12, 16, 20, 0.5);
+}
+
+.charts-host {
+  width: 100%;
+  height: 100%;
+}
+
+.readout-panel {
+  flex-shrink: 0;
+  width: 250px;
+  margin: 0;
+  padding: 8px 10px;
+  overflow-y: auto;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: rgba(12, 16, 20, 0.5);
+  font-size: 12px;
+}
+
+.readout-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #789;
+}
+
+.readout-group h3 {
+  margin: 6px 0 4px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid #2a323a;
+  font-size: 12px;
+  color: #9ab;
+}
+
+.readout-group ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.readout-group li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 1px 0;
+  color: #cde;
+}
+
+.readout-name {
+  overflow: hidden;
+  color: #9ab;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.readout-value {
+  font-variant-numeric: tabular-nums;
+  color: #eaf7fa;
+  white-space: nowrap;
+}
+
+.readout-value i {
+  color: #789;
+  font-size: 11px;
+  font-style: normal;
+}
+

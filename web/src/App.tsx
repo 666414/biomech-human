@@ -6,7 +6,10 @@
  *   3. 04 关键帧弹卡（T6 用 player/activeKeyframe 检查 frame.time）
  * 反向联动：Timeline seek → store.t；Viewport 拾取 → store.selectPart。
  */
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
+import ParamCharts from './charts/ParamCharts'
+import { buildChartSets } from './charts/buildChartSets'
+import ReadoutPanel from './components/ReadoutPanel'
 import ScenePicker from './components/ScenePicker'
 import Timeline from './components/Timeline'
 import Viewport, { type ViewportHandle } from './components/Viewport'
@@ -18,9 +21,13 @@ import './App.css'
 function App() {
   const viewportRef = useRef<ViewportHandle>(null)
   const frame = usePlayback()
+  const scene = useStore((s) => s.scene)
+  const seek = useStore((s) => s.seek)
   const selectedPartId = useStore((s) => s.selectedPartId)
   const rigMeta = useStore((s) => s.rigMeta)
   const setScene = useStore((s) => s.setScene)
+  // 图表数据准备（板块 03）：场景切换时重算，曲线与读数面板共用
+  const chartSets = useMemo(() => (scene ? buildChartSets(scene) : null), [scene])
   const selectedZh = selectedPartId
     ? (rigMeta?.parts.find((p) => p.id === selectedPartId)?.names.zh ?? selectedPartId)
     : null
@@ -54,6 +61,18 @@ function App() {
       </header>
 
       <Viewport ref={viewportRef} />
+
+      {/* 板块 03：参数曲线 + 游标 + 读数面板（可堆叠 flex 外壳，响应式由 T7 打磨） */}
+      {scene && chartSets ? (
+        <section className="app-charts">
+          <div className="charts-box">
+            <ParamCharts scene={scene} sets={chartSets} frame={frame} onSeek={seek} />
+          </div>
+          <ReadoutPanel sets={chartSets} frame={frame} />
+        </section>
+      ) : (
+        <section className="app-charts app-charts-placeholder">参数图表（场景未加载）</section>
+      )}
 
       <Timeline />
     </div>
