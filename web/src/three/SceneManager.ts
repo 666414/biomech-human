@@ -15,9 +15,26 @@ import { applyPose, buildPoseMap, type PoseMap } from './poseMap'
 const HIGHLIGHT_COLOR = 0x33ddff
 const GHOST_OPACITY = 0.15
 
-/** 模型加载失败自动重试（onError 任意原因，含网络偶发 ERR_ABORTED）：上限次数与延迟 */
+/** 模型加载失败自动重试（下载/解析失败任意原因，含网络偶发 ERR_ABORTED）：上限次数与延迟 */
 const MODEL_LOAD_MAX_RETRIES = 1
 const MODEL_LOAD_RETRY_DELAY_MS = 1500
+
+/** human.glb 已知总大小（字节，实测）：响应缺 content-length 时进度兜底 */
+const MODEL_KNOWN_BYTES = 10049520
+
+/** 调试探针状态（Viewport 写入容器 DOM 的 data-debug 属性；供自动化验收与用户排障） */
+export interface DebugState {
+  /** gltf onLoad 成功且已挂入场景 */
+  modelLoaded: boolean
+  /** 模型加载尝试次数（手动重试重建实例后归零） */
+  attempts: number
+  /** 最近一次加载/解析错误 message */
+  lastError: string | null
+  /** 模型具名 body 节点数（glb 契约：body 节点 ≈ rig body 数 80） */
+  bodyCount: number
+  /** 渲染循环已执行帧数（RAF 计数） */
+  renderFrames: number
+}
 
 /** 高亮会话开始时记录的材质原始属性（恢复用） */
 interface MaterialSnapshot {
@@ -56,6 +73,17 @@ export class SceneManager {
   private ro: ResizeObserver | null = null
   /** 本次 loadModel 已自动重试次数（手动重试会整体重建实例，计数随之归零） */
   private loadRetries = 0
+  // ---------- 调试探针状态（debugState 暴露） ----------
+  /** 模型加载尝试次数 */
+  private loadAttempts = 0
+  /** 最近一次加载/解析错误 message */
+  private lastError: string | null = null
+  /** gltf onLoad 成功且已挂入场景 */
+  private modelLoaded = false
+  /** 模型具名 body 节点数（加载完成时统计一次） */
+  private bodyCount = 0
+  /** 渲染循环已执行帧数 */
+  private renderFrames = 0
 
   /** 渲染循环前回调（Viewport 借此每帧读 store → setPose，保证同帧生效） */
   onFrame: ((sm: SceneManager) => void) | null = null
@@ -121,7 +149,9 @@ export class SceneManager {
 
   /**
    * 加载 glb（未启用 Draco——模型未压缩，仅留接口）。
-   * 失败/中断（onError 任意原因）自动重试 MODEL_LOAD_MAX_RETRIES 次
+   * 自管 fetch 流式读取完整字节后交给 loader.parse（不再走 FileLoader 流式请求，
+   * 绕开自动化浏览器中 GLTFLoader.load 报 net::ERR_ABORTED 的问题）。
+   * 下载/解析失败（任意原因）自动重试 MODEL_LOAD_MAX_RETRIES 次
    * （间隔 MODEL_LOAD_RETRY_DELAY_MS，console.warn 记录），仍失败才 reject
    * 进错误态；重试期间 onProgress 照常上报（进度从 0 重新计）。
    */
@@ -146,30 +176,107 @@ export class SceneManager {
     })
   }
 
-  /** 单次 glb 加载（loadModel 的重试编排单元） */
-  private loadGltfOnce(url: string, onProgress?: (pct: number) => void): Promise<void> {
+  /** 单次 glb 加载（loadModel 的重试编排单元）：fetch 流式下载 → loader.parse */
+  private async loadGltfOnce(url: string, onProgress?: (pct: number) => void): Promise<void> {
+    this.loadAttempts += 1
     const loader = new GLTFLoader()
     const draco = new DRACOLoader() // 模型未 Draco 压缩，不解码器路径；保留扩展点
     draco.dispose()
     loader.setDRACOLoader(draco)
 
-    return new Promise((resolve, reject) => {
-      loader.load(
-        url,
+    let buffer: ArrayBuffer
+    try {
+      buffer = await this.fetchGlb(url, onProgress)
+    } catch (e) {
+      const err = e instanceof Error ? e : new Error(String(e))
+      this.lastError = err.message
+      throw err
+    }
+    if (this.disposed) throw new Error('模型加载已取消（实例已销毁）')
+
+    await new Promise<void>((resolve, reject) => {
+      loader.parse(
+        buffer,
+        '',
         (gltf) => {
-          if (this.disposed) return resolve()
-          this.modelRoot = gltf.scene
-          this.scene.add(gltf.scene)
-          this.deshareMaterials(gltf.scene)
-          this.tryBuildPoseMap()
-          resolve()
+          try {
+            if (this.disposed) return resolve()
+            this.modelRoot = gltf.scene
+            this.scene.add(gltf.scene)
+            this.deshareMaterials(gltf.scene)
+            this.bodyCount = this.countBodyNodes(gltf.scene)
+            this.modelLoaded = true
+            this.tryBuildPoseMap()
+            resolve()
+          } catch (e) {
+            const err = e instanceof Error ? e : new Error(String(e))
+            this.lastError = err.message
+            reject(err)
+          }
         },
-        (ev) => {
-          if (onProgress && ev.total > 0) onProgress(Math.round((ev.loaded / ev.total) * 100))
+        (err: unknown) => {
+          const e = err instanceof Error ? err : new Error(String(err))
+          this.lastError = e.message
+          reject(e)
         },
-        (err) => reject(err instanceof Error ? err : new Error(String(err))),
       )
     })
+  }
+
+  /** 流式下载 glb：累积字节分块，按 content-length（缺失用已知大小兜底）上报进度 */
+  private async fetchGlb(url: string, onProgress?: (pct: number) => void): Promise<ArrayBuffer> {
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`模型下载失败：HTTP ${res.status} ${res.statusText}`)
+    const total = Number(res.headers.get('content-length')) || MODEL_KNOWN_BYTES
+
+    if (!res.body) {
+      // 无流式 body（极端环境）：整体读入，进度直接到 100
+      const buf = await res.arrayBuffer()
+      onProgress?.(100)
+      return buf
+    }
+
+    const reader = res.body.getReader()
+    const chunks: Uint8Array[] = []
+    let loaded = 0
+    for (;;) {
+      const { done, value } = await reader.read()
+      if (done) break
+      chunks.push(value)
+      loaded += value.byteLength
+      if (onProgress && total > 0) onProgress(Math.min(Math.round((loaded / total) * 100), 100))
+      if (this.disposed) {
+        void reader.cancel().catch(() => {})
+        throw new Error('模型加载已取消（实例已销毁）')
+      }
+    }
+    const out = new Uint8Array(loaded)
+    let off = 0
+    for (const chunk of chunks) {
+      out.set(chunk, off)
+      off += chunk.byteLength
+    }
+    return out.buffer
+  }
+
+  /** 统计具名 body 节点数（glb 契约：body 节点名 = XML body id，mesh 子节点含 '__'） */
+  private countBodyNodes(root: THREE.Object3D): number {
+    let n = 0
+    root.traverse((obj) => {
+      if (obj.name && !obj.name.includes('__')) n += 1
+    })
+    return n
+  }
+
+  /** 调试探针：加载与渲染关键状态（Viewport 实时写入容器 DOM 供自动化验收/排障） */
+  debugState(): DebugState {
+    return {
+      modelLoaded: this.modelLoaded,
+      attempts: this.loadAttempts,
+      lastError: this.lastError,
+      bodyCount: this.bodyCount,
+      renderFrames: this.renderFrames,
+    }
   }
 
   private tryBuildPoseMap(): void {
@@ -372,6 +479,7 @@ export class SceneManager {
       this.onFrame?.(this)
       this.controls.update()
       this.renderer.render(this.scene, this.camera)
+      this.renderFrames += 1 // 调试探针：RAF 帧计数
     }
     this.rafId = requestAnimationFrame(tick)
   }

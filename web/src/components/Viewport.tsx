@@ -17,7 +17,19 @@ import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'reac
 import { useStore } from '../store'
 import type { JointAngles, PartGroup } from '../types'
 import { checkPoseMap, formatFkResult, loadFkReference } from '../three/fkCheck'
-import { SceneManager, type Quality, type ViewPreset } from '../three/SceneManager'
+import { SceneManager, type DebugState, type Quality, type ViewPreset } from '../three/SceneManager'
+
+/** 调试探针写入 DOM 的节流间隔（ms） */
+const DEBUG_INTERVAL_MS = 500
+
+/** 探针初值（SceneManager 建好前/失败时的兜底显示） */
+const DEBUG_INITIAL: DebugState = {
+  modelLoaded: false,
+  attempts: 0,
+  lastError: null,
+  bodyCount: 0,
+  renderFrames: 0,
+}
 
 function isFkCheck(): boolean {
   return new URLSearchParams(window.location.search).get('fkcheck') === '1'
@@ -70,6 +82,8 @@ export default function Viewport({
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const smRef = useRef<SceneManager | null>(null)
+  /** 调试探针宿主元素（SceneManager 状态经 data-debug 属性实时外露） */
+  const debugRef = useRef<HTMLDivElement>(null)
   /** 回放层最近一次注入的位姿（渲染循环每帧重放，模型加载完成自愈） */
   const poseRef = useRef<JointAngles | null>(null)
   const [progress, setProgress] = useState(0)
@@ -95,11 +109,24 @@ export default function Viewport({
       sm = new SceneManager(canvas, detectQuality())
     } catch (e) {
       // jsdom / 无 WebGL 环境降级：显示占位文案，不阻塞应用
-      setError(`WebGL 初始化失败：${e instanceof Error ? e.message : String(e)}`)
+      const msg = `WebGL 初始化失败：${e instanceof Error ? e.message : String(e)}`
+      debugRef.current?.setAttribute(
+        'data-debug',
+        JSON.stringify({ ...DEBUG_INITIAL, lastError: msg }),
+      )
+      setError(msg)
       onError?.()
       return
     }
     smRef.current = sm
+
+    // 调试探针：SceneManager 关键状态节流写入容器 DOM（开发/生产均启用，
+    // 供自动化验收与用户排障——WebGL canvas 像素不可读，DOM 属性是可靠判定源）
+    const writeDebug = (): void => {
+      debugRef.current?.setAttribute('data-debug', JSON.stringify(sm!.debugState()))
+    }
+    writeDebug()
+    const debugTimer = window.setInterval(writeDebug, DEBUG_INTERVAL_MS)
 
     // 渲染循环回调：只重放缓存位姿（注入走 ref 句柄，见 useImperativeHandle）
     sm.onFrame = (instance) => {
@@ -147,6 +174,7 @@ export default function Viewport({
 
     return () => {
       cancelled = true
+      window.clearInterval(debugTimer)
       sm?.dispose()
       smRef.current = null
     }
@@ -246,6 +274,8 @@ export default function Viewport({
         </div>
       )}
       {fkText && <pre className="fk-panel">{fkText}</pre>}
+      {/* 调试探针：SceneManager 状态 JSON（自动化验收读取，视觉隐藏） */}
+      <div ref={debugRef} data-debug={JSON.stringify(DEBUG_INITIAL)} hidden />
     </div>
   )
 }
