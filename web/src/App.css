@@ -301,3 +301,165 @@
   font-style: normal;
 }
 
+/* P3 Task 6 样式：知识卡面板（桌面与读数面板同列；移动端抽屉由 T7 统一打磨） */
+
+.app-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 250px;
+  flex-shrink: 0;
+  min-height: 0;
+}
+
+.knowledge-panel {
+  flex-shrink: 0;
+  max-height: 58%;
+  padding: 10px 12px;
+  overflow-y: auto;
+  border: 1px solid #2a5a66;
+  border-radius: 8px;
+  background: rgba(12, 16, 20, 0.5);
+  color: #cde;
+  font-size: 12px;
+}
+
+.knowledge-panel-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-style: dashed;
+  border-color: #333;
+  color: #789;
+}
+
+.knowledge-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.knowledge-term {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.knowledge-term strong {
+  color: #eaf7fa;
+  font-size: 14px;
+}
+
+.knowledge-term span {
+  color: #7aa;
+  font-size: 11px;
+}
+
+.knowledge-close {
+  padding: 0 6px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #9ab;
+  font-size: 16px;
+  line-height: 1.2;
+  cursor: pointer;
+}
+
+.knowledge-close:hover {
+  color: #eaf7fa;
+  background: rgba(51, 221, 255, 0.12);
+}
+
+.knowledge-meta {
+  margin-top: 6px;
+  padding: 3px 8px;
+  border-left: 2px solid #ffb545;
+  border-radius: 0 4px 4px 0;
+  background: rgba(255, 181, 69, 0.08);
+  color: #ffd9a0;
+  font-size: 11px;
+}
+
+.knowledge-note {
+  margin-top: 6px;
+  color: #c9a06a;
+  font-size: 11px;
+}
+
+.knowledge-body {
+  margin: 8px 0 0;
+}
+
+.knowledge-section {
+  margin-bottom: 8px;
+}
+
+.knowledge-section dt {
+  margin-bottom: 2px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid #2a323a;
+  color: #9ab;
+  font-size: 12px;
+}
+
+.knowledge-section dd {
+  margin: 0;
+  color: #bcd;
+  line-height: 1.6;
+}
+
+.knowledge-refs {
+  margin: 6px 0 0;
+  padding: 6px 0 0;
+  border-top: 1px solid #2a323a;
+  list-style: none;
+}
+
+.knowledge-refs li {
+  color: #7aa;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.knowledge-refs a {
+  color: #5bc8dd;
+  text-decoration: none;
+}
+
+.knowledge-locate {
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px 0;
+  border: 1px solid #2a5a66;
+  border-radius: 6px;
+  background: rgba(51, 221, 255, 0.08);
+  color: #7fdcef;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.knowledge-locate:hover {
+  background: rgba(51, 221, 255, 0.18);
+}
+
+/* 移动端抽屉形态（组件级预留；全局响应式外壳由 T7 打磨） */
+@media (max-width: 768px) {
+  .knowledge-panel {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    max-height: 60dvh;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .knowledge-panel-empty {
+    position: static;
+    max-height: none;
+  }
+}
+

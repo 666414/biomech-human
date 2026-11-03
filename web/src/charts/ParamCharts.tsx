@@ -30,6 +30,7 @@ import type {
 } from 'echarts/components'
 import type { PlaybackFrame } from '../player/sampleFrame'
 import type { SceneData } from '../types'
+import { clampCursorX } from './cursor'
 import type { ChartSets, SeriesData } from './buildChartSets'
 import { lttb } from './lttb'
 
@@ -67,6 +68,8 @@ interface ParamChartsProps {
   sets: ChartSets
   frame: PlaybackFrame | null
   onSeek: (t: number) => void
+  /** 曲线系列点击（触发路径 3）：seriesName = 关节/肌肉 id，由 App 层查知识卡 */
+  onSeriesClick?: (name: string) => void
 }
 
 /** [x, y] 数据对（value[0] 即点击反查的时间） */
@@ -127,8 +130,8 @@ function rewindow(chart: EChartsType, sets: ChartSets) {
   chart.setOption({ series: all.map((s) => ({ data: windowLttb(s, lo, hi) })) })
 }
 
-/** 游标竖线增量更新（按 id merge，不整卡重建） */
-function applyCursor(chart: EChartsType, t: number, hostHeight: number) {
+/** 游标竖线增量更新（按 id merge，不整卡重建）；x 钳制在 grid rect 内 */
+function applyCursor(chart: EChartsType, t: number, hostWidth: number, hostHeight: number) {
   let px: unknown
   try {
     px = chart.convertToPixel({ xAxisIndex: 0 }, t)
@@ -136,13 +139,14 @@ function applyCursor(chart: EChartsType, t: number, hostHeight: number) {
     return // 轴尚未完成布局，下一帧补齐
   }
   if (typeof px !== 'number' || !Number.isFinite(px)) return
+  const clampedX = clampCursorX(px, GRID_LEFT, hostWidth - GRID_RIGHT)
   chart.setOption({
     graphic: [
       {
         id: 'cursor',
         type: 'line',
         shape: { x1: 0, y1: 0, x2: 0, y2: Math.max(hostHeight - SLIDER_HEIGHT - 4, 0) },
-        x: px,
+        x: clampedX,
         y: 0,
       },
     ],
@@ -269,12 +273,13 @@ function buildOption(sets: ChartSets, duration: number): ECOption {
   }
 }
 
-export default function ParamCharts({ scene, sets, frame, onSeek }: ParamChartsProps) {
+export default function ParamCharts({ scene, sets, frame, onSeek, onSeriesClick }: ParamChartsProps) {
   const hostRef = useRef<HTMLDivElement>(null)
   const chartRef = useRef<EChartsType | null>(null)
   const setsRef = useRef(sets)
   const durationRef = useRef(scene.duration)
   const onSeekRef = useRef(onSeek)
+  const onSeriesClickRef = useRef(onSeriesClick)
   const cursorTRef = useRef(0)
 
   // 挂载：init + 交互事件（实例随宿主生命周期唯一，场景切换走 setOption 重建）
@@ -284,9 +289,11 @@ export default function ParamCharts({ scene, sets, frame, onSeek }: ParamChartsP
     const chart = init(host)
     chartRef.current = chart
 
-    // 点击数据点 → 取 value[0]（原始帧时间）seek
+    // 点击数据点 → 取 value[0]（原始帧时间）seek；seriesName 上抛供知识卡查卡
     chart.on('click', (params: unknown) => {
-      const value = (params as { value?: unknown }).value
+      const p = params as { value?: unknown; seriesName?: unknown }
+      if (typeof p.seriesName === 'string') onSeriesClickRef.current?.(p.seriesName)
+      const value = p.value
       if (Array.isArray(value) && typeof value[0] === 'number') {
         cursorTRef.current = value[0]
         onSeekRef.current(value[0])
@@ -312,7 +319,7 @@ export default function ParamCharts({ scene, sets, frame, onSeek }: ParamChartsP
 
     const ro = new ResizeObserver(() => {
       chart.resize()
-      applyCursor(chart, cursorTRef.current, host.clientHeight)
+      applyCursor(chart, cursorTRef.current, host.clientWidth, host.clientHeight)
     })
     ro.observe(host)
 
@@ -331,13 +338,21 @@ export default function ParamCharts({ scene, sets, frame, onSeek }: ParamChartsP
   useEffect(() => {
     onSeekRef.current = onSeek
   }, [onSeek])
+  useEffect(() => {
+    onSeriesClickRef.current = onSeriesClick
+  }, [onSeriesClick])
 
   // 场景/数据变化：整卡重建（notMerge 重置 dataZoom 窗口），随后补游标
   useEffect(() => {
     const chart = chartRef.current
     if (!chart) return
     chart.setOption(buildOption(sets, scene.duration), true)
-    applyCursor(chart, cursorTRef.current, hostRef.current?.clientHeight ?? 0)
+    applyCursor(
+      chart,
+      cursorTRef.current,
+      hostRef.current?.clientWidth ?? 0,
+      hostRef.current?.clientHeight ?? 0,
+    )
   }, [sets, scene.duration])
 
   // 游标跟随 t：每次帧更新增量移动竖线（误差 ≤1 帧）
@@ -345,7 +360,12 @@ export default function ParamCharts({ scene, sets, frame, onSeek }: ParamChartsP
     const chart = chartRef.current
     if (!frame || !chart) return
     cursorTRef.current = frame.time
-    applyCursor(chart, frame.time, hostRef.current?.clientHeight ?? 0)
+    applyCursor(
+      chart,
+      frame.time,
+      hostRef.current?.clientWidth ?? 0,
+      hostRef.current?.clientHeight ?? 0,
+    )
   }, [frame])
 
   return <div ref={hostRef} className="charts-host" />

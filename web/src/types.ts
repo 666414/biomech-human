@@ -99,6 +99,8 @@ export interface KnowledgeCard {
   /** 临床要点 */
   clinic: string
   refs: KnowledgeRef[]
+  /** 内容标注（如 [stub：P4 医学审核]），可选，审核通过后可移除 */
+  note?: string
 }
 
 /** 关节名 → 当前角度/位移（hinge rad / slide m） */
