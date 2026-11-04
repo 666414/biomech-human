@@ -19,8 +19,22 @@ const GHOST_OPACITY = 0.15
 const MODEL_LOAD_MAX_RETRIES = 1
 const MODEL_LOAD_RETRY_DELAY_MS = 1500
 
-/** human.glb 已知总大小（字节，实测）：响应缺 content-length 时进度兜底 */
-const MODEL_KNOWN_BYTES = 10049520
+/** human.glb 已知总大小（字节，Draco 压缩后实测）：响应缺 content-length 时进度兜底 */
+const MODEL_KNOWN_BYTES = 646860
+
+/**
+ * Draco 解码器（模块级单例）：wasm 解码器只实例化一次，跨 SceneManager 实例
+ * （手动重试会整体重建）复用。解码器文件由 sync-assets 复制到 public/draco/
+ * （three 自带版本，与 runtime 的 DRACOLoader 同源），相对路径 './draco/' 适配任意 base。
+ */
+let dracoLoader: DRACOLoader | null = null
+function getDracoLoader(): DRACOLoader {
+  if (!dracoLoader) {
+    dracoLoader = new DRACOLoader()
+    dracoLoader.setDecoderPath('./draco/')
+  }
+  return dracoLoader
+}
 
 /** 调试探针状态（Viewport 写入容器 DOM 的 data-debug 属性；供自动化验收与用户排障） */
 export interface DebugState {
@@ -148,7 +162,8 @@ export class SceneManager {
   }
 
   /**
-   * 加载 glb（未启用 Draco——模型未压缩，仅留接口）。
+   * 加载 glb（Draco 压缩：KHR_draco_mesh_compression，节点层级/变换不变，
+   * poseMap/FK 对账契约不受影响）。解码器单例见 getDracoLoader()。
    * 自管 fetch 流式读取完整字节后交给 loader.parse（不再走 FileLoader 流式请求，
    * 绕开自动化浏览器中 GLTFLoader.load 报 net::ERR_ABORTED 的问题）。
    * 下载/解析失败（任意原因）自动重试 MODEL_LOAD_MAX_RETRIES 次
@@ -180,9 +195,7 @@ export class SceneManager {
   private async loadGltfOnce(url: string, onProgress?: (pct: number) => void): Promise<void> {
     this.loadAttempts += 1
     const loader = new GLTFLoader()
-    const draco = new DRACOLoader() // 模型未 Draco 压缩，不解码器路径；保留扩展点
-    draco.dispose()
-    loader.setDRACOLoader(draco)
+    loader.setDRACOLoader(getDracoLoader())
 
     let buffer: ArrayBuffer
     try {

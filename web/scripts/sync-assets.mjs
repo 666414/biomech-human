@@ -1,4 +1,6 @@
 // 将 pipeline 产物与知识库内容同步到 web/public/data，供前端静态加载。
+// glb 走 Draco 压缩管线（compress-glb.mjs，<8MB 断言 + 源未变跳过），
+// 并确保 Draco wasm 解码器就位 public/draco/；其余文件原样复制。
 // 用法：npm run sync-assets（cwd = web/）
 import { copyFile, mkdir, readdir, stat } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
@@ -6,6 +8,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { validateKnowledge } from './lib/validate-knowledge.mjs'
 import { loadKnowledgeCards, loadRigMetaParts, loadScenes, makeAssetsExist } from './lib/load-knowledge.mjs'
+import { compressHumanGlb, ensureDracoDecoders } from './compress-glb.mjs'
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url))
 const webRoot = path.resolve(scriptDir, '..')
@@ -90,11 +93,8 @@ async function syncKnowledgeDir(srcDir, destDir) {
 }
 
 let total = 0
-total += await syncFile(
-  path.join(repoRoot, 'pipeline', 'out', 'fullbody', 'human.glb'),
-  path.join(publicData, 'models'),
-  'human.glb',
-)
+total += await ensureDracoDecoders()
+total += await compressHumanGlb()
 total += await syncFile(
   path.join(repoRoot, 'pipeline', 'out', 'fullbody', 'rig-meta.json'),
   path.join(publicData, 'models'),
