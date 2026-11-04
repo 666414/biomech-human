@@ -162,7 +162,7 @@ for (const file of sceneFiles) {
   for (const kf of scene.keyframes) sceneCardIds.add(kf.cardId)
 }
 
-describe('knowledge.json 内容校验（stub，P4 待医学审核）', () => {
+describe('knowledge.json 内容校验（P4 正式教学卡）', () => {
   it('场景数据源就位：5 场景、10 个关键帧 cardId', () => {
     expect(SCENE_IDS).toHaveLength(5)
     expect(sceneFiles).toHaveLength(5)
@@ -187,8 +187,10 @@ describe('knowledge.json 内容校验（stub，P4 待医学审核）', () => {
     }
   })
 
-  it('keyframe 卡 cardId 与 5 场景 keyframes 的 cardId 集合完全一致', () => {
-    const cardIds = new Set(contentCards.map((c) => c.cardId).filter(Boolean))
+  it('keyframe 卡 cardId 与 5 场景 keyframes 的 cardId 集合完全一致（肌肉卡不在集合内）', () => {
+    const kfCards = contentCards.filter((c) => c.cardId && sceneCardIds.has(c.cardId))
+    const cardIds = new Set(kfCards.map((c) => c.cardId as string))
+    expect(kfCards).toHaveLength(sceneCardIds.size)
     expect([...cardIds].sort()).toEqual([...sceneCardIds].sort())
   })
 
@@ -201,9 +203,9 @@ describe('knowledge.json 内容校验（stub，P4 待医学审核）', () => {
     }
   })
 
-  it('stub 文案已标注（note 含 stub 标记）', () => {
+  it('正式教学卡 note 已标注（P4 Task 2：note 含「P4 内容」标记）', () => {
     for (const c of contentCards) {
-      expect(c.note, `卡 ${c.id} 缺 stub 标注`).toContain('stub')
+      expect(c.note, `卡 ${c.id} 缺 P4 内容标注`).toContain('P4 内容')
     }
   })
 })
