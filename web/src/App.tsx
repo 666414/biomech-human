@@ -1,8 +1,8 @@
 /**
  * 应用外壳（板块 02 集成 + Task 7 响应式布局）：帧分发与桌面/移动端外壳。
- * 桌面（> 900px）：顶栏（标题/场景/视角预设/分层控件）+ 左 3D 视口（主体）+
+ * 桌面（> 1024px）：顶栏（标题/场景/视角预设/分层控件）+ 左 3D 视口（主体）+
  * 右侧栏（读数 + 知识卡）+ 参数曲线横排 + 底部时间轴常驻。
- * 移动端（≤ 900px）：Tab 切换（3D / 曲线 / 知识），时间轴常驻底部，
+ * 移动端（≤ 1024px）：Tab 切换（3D / 曲线 / 知识），时间轴常驻底部，
  * 知识卡为底部抽屉；曲线 Tab 内提供图表全屏展开。
  * 全屏加载态：首次加载（进度条复用 Viewport 模型进度回调）与场景切换遮罩共用，
  * 场景数据加载失败在遮罩内显示错误 + 重试。
@@ -31,7 +31,7 @@ import type { PartGroup } from './types'
 import './App.css'
 
 /** 移动端断点（与 App.css 的 media query 一致） */
-const MOBILE_QUERY = '(max-width: 900px)'
+const MOBILE_QUERY = '(max-width: 1024px)'
 type TabId = '3d' | 'charts' | 'knowledge'
 
 /** 分层显示控件（顶栏）：接 SceneManager.setLayerVisible/setLayerOpacity */
@@ -43,7 +43,7 @@ const LAYERS: Array<{ group: PartGroup; label: string }> = [
 
 /** 是否移动端布局（jsdom 等无 matchMedia 环境回退到 innerWidth 初值） */
 function useIsMobile(): boolean {
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 900)
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024)
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return
     const mq = window.matchMedia(MOBILE_QUERY)

@@ -54,15 +54,17 @@ function gltfTransformBin() {
 export async function ensureDracoDecoders() {
   let copied = 0
   if (!existsSync(DECODER_SRC_DIR)) {
-    console.log(`[warn] three 自带 Draco 解码器目录缺失（${path.relative(repoRoot, DECODER_SRC_DIR)}），跳过复制`)
-    return 0
+    // decoder 是硬依赖：DRACOLoader.setDecoderPath('./draco/') 运行时必拉取，
+    // 缺失 = 压缩模型 404，宁可 fail fast 也不带病产出
+    console.error(`[fail] three 自带 Draco 解码器目录缺失（${path.relative(repoRoot, DECODER_SRC_DIR)}），请重装 three 依赖`)
+    process.exit(1)
   }
   for (const name of DECODER_FILES) {
     const src = path.join(DECODER_SRC_DIR, name)
     const dest = path.join(DECODER_DEST_DIR, name)
     if (!existsSync(src)) {
-      console.warn(`[warn] 解码器源文件缺失：${name}，跳过`)
-      continue
+      console.error(`[fail] 解码器源文件缺失：${name}（${path.relative(repoRoot, src)}），运行时必 404，中止`)
+      process.exit(1)
     }
     const srcSize = (await stat(src)).size
     if (existsSync(dest) && (await stat(dest)).size === srcSize) {
