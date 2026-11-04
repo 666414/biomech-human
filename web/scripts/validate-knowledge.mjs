@@ -57,14 +57,15 @@ try {
 const { ok, errors, warnings, stats } = validateKnowledge({ cards, rigMetaParts, scenes, assetsExist })
 
 for (const w of warnings) {
-  const where = [w.scene, w.cardId ? `卡 "${w.cardId}"` : `#${w.index ?? '?'}`].filter(Boolean).join(' ')
-  console.warn(`[warn] [${w.code}] ${where} ${w.message}`)
+  // 卡定位由 message 内的 tag（卡 "id" / 第 N 张卡）承载，where 只补场景，避免输出重复卡名
+  const where = w.scene ? ` ${w.scene}` : ''
+  console.warn(`[warn] [${w.code}]${where} ${w.message}`)
 }
 
 if (!ok) {
   for (const e of errors) {
-    const where = [e.scene, e.cardId ? `卡 "${e.cardId}"` : `#${e.index ?? '?'}`].filter(Boolean).join(' ')
-    console.error(`[error] [${e.code}] ${where} ${e.message}`)
+    const where = e.scene ? ` ${e.scene}` : ''
+    console.error(`[error] [${e.code}]${where} ${e.message}`)
   }
   console.error(`\n知识库校验失败：${errors.length} 个错误，${warnings.length} 个警告`)
   process.exit(1)

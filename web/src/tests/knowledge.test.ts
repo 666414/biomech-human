@@ -5,14 +5,16 @@
  * 2. checkKeyframeCard 关键帧弹卡去重判定（纯函数）；
  * 3. findSeriesCard 曲线系列点击查卡（查不到不弹）；
  * 4. clampCursorX 游标钳制（ParamCharts dataZoom 窗口外不越界）；
- * 5. 真实内容校验（node fs 读文件）：content/knowledge/knowledge.json 字段齐全、
- *    keyframe 卡 cardId 与 5 场景 keyframes 的 cardId 集合一致、
- *    partId 都在 rig-meta id 集合内。
+ * 5. 真实内容校验（node fs 读文件）：委托 validateKnowledge 单一口径校验
+ *    content/knowledge/knowledge.json（字段/refs/partId/关键帧引用/肌肉联动），
+ *    keyframe 卡 cardId 与 5 场景 keyframes 的 cardId 集合一致（反向无悬空卡），
+ *    03 曲线点击（findSeriesCard）命中真实肌肉卡。
  */
 import { readFileSync, readdirSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { validateKnowledge } from '../../scripts/lib/validate-knowledge.mjs'
 import { clampCursorX } from '../charts/cursor'
 import { indexKnowledge, SCENE_IDS } from '../data'
 import { checkKeyframeCard, findSeriesCard } from '../knowledge/knowledge'
@@ -147,65 +149,64 @@ describe('clampCursorX（游标钳制到 grid 内）', () => {
   })
 })
 
-// ---------- 真实内容校验（content/knowledge/knowledge.json） ----------
+// ---------- 真实内容校验（content/knowledge/knowledge.json，单一口径 = validateKnowledge） ----------
 
 const contentCards = readJson('content/knowledge/knowledge.json') as KnowledgeCard[]
 const rigMeta = readJson('web/public/data/models/rig-meta.json') as RigMeta
 
-/** 5 场景 keyframes 的 cardId 全集 */
-const sceneCardIds = new Set<string>()
+/** 5 场景 JSON（muscles + keyframes 供 validateKnowledge 联动校验） */
 const sceneFiles = readdirSync(path.join(repoRoot, 'web/public/data/scenes')).filter((f) =>
   f.endsWith('.json'),
 )
-for (const file of sceneFiles) {
-  const scene = readJson(`web/public/data/scenes/${file}`) as { keyframes: Keyframe[] }
+const scenes = sceneFiles.map(
+  (file) => readJson(`web/public/data/scenes/${file}`) as { muscles: string[]; keyframes: Keyframe[] },
+)
+
+/** 5 场景 keyframes 的 cardId 全集 */
+const sceneCardIds = new Set<string>()
+for (const scene of scenes) {
   for (const kf of scene.keyframes) sceneCardIds.add(kf.cardId)
 }
 
 describe('knowledge.json 内容校验（P4 正式教学卡）', () => {
   it('场景数据源就位：5 场景、10 个关键帧 cardId', () => {
     expect(SCENE_IDS).toHaveLength(5)
-    expect(sceneFiles).toHaveLength(5)
+    expect(scenes).toHaveLength(5)
     expect(sceneCardIds.size).toBe(10)
   })
 
-  it('≥14 张卡且字段齐全（term/anatomy/biomech/clinic/refs、id 唯一）', () => {
-    expect(contentCards.length).toBeGreaterThanOrEqual(14)
-    const ids = new Set<string>()
-    for (const c of contentCards) {
-      expect(c.id, '卡 id 必填').toBeTruthy()
-      expect(ids.has(c.id), `卡 id 重复：${c.id}`).toBe(false)
-      ids.add(c.id)
-      expect(c.term?.zh, `卡 ${c.id} 缺 term.zh`).toBeTruthy()
-      expect(c.term?.en, `卡 ${c.id} 缺 term.en`).toBeTruthy()
-      expect(c.anatomy, `卡 ${c.id} 缺 anatomy`).toBeTruthy()
-      expect(c.biomech, `卡 ${c.id} 缺 biomech`).toBeTruthy()
-      expect(c.clinic, `卡 ${c.id} 缺 clinic`).toBeTruthy()
-      expect(c.refs?.length, `卡 ${c.id} refs 至少 1 条`).toBeGreaterThanOrEqual(1)
-      for (const ref of c.refs ?? []) expect(ref.label, `卡 ${c.id} 引用缺 label`).toBeTruthy()
-      expect(c.cardId || c.partId, `卡 ${c.id} 须关联 cardId 或 partId`).toBeTruthy()
-    }
+  it('全量通过 validateKnowledge 构建期校验（字段/refs/partId/关键帧引用/肌肉联动单一口径）', () => {
+    const r = validateKnowledge({ cards: contentCards, rigMetaParts: rigMeta.parts, scenes })
+    expect(r.errors).toEqual([])
+    expect(r.warnings).toEqual([])
+    expect(r.ok).toBe(true)
+    // 41 张 = 10 关键帧 + 14 部位 + 17 肌肉，全部关联（旧「部位卡 ≥4 / refs ≥1」口径随之被精确化）
+    expect(r.stats).toEqual({
+      cards: 41,
+      partCards: 14,
+      keyframeCards: 10,
+      muscleCards: 17,
+      unlinkedCards: 0,
+      scenes: 5,
+      keyframes: 10,
+    })
   })
 
-  it('keyframe 卡 cardId 与 5 场景 keyframes 的 cardId 集合完全一致（肌肉卡不在集合内）', () => {
+  it('keyframe 卡 cardId 与 5 场景 keyframes 的 cardId 集合完全一致（反向：无悬空关键帧卡）', () => {
     const kfCards = contentCards.filter((c) => c.cardId && sceneCardIds.has(c.cardId))
     const cardIds = new Set(kfCards.map((c) => c.cardId as string))
     expect(kfCards).toHaveLength(sceneCardIds.size)
     expect([...cardIds].sort()).toEqual([...sceneCardIds].sort())
   })
 
-  it('部位卡 ≥4 张且 partId 都在 rig-meta id 集合内', () => {
-    const partCards = contentCards.filter((c) => c.partId)
-    expect(partCards.length).toBeGreaterThanOrEqual(4)
-    const partIds = new Set(rigMeta.parts.map((p) => p.id))
-    for (const c of partCards) {
-      expect(partIds.has(c.partId as string), `未知 partId：${c.partId}`).toBe(true)
-    }
-  })
-
-  it('正式教学卡 note 已标注（P4 Task 2：note 含「P4 内容」标记）', () => {
+  it('正式教学卡 note 已标注（P4 内容转正标记，note 语义 = 审查状态标注）', () => {
     for (const c of contentCards) {
       expect(c.note, `卡 ${c.id} 缺 P4 内容标注`).toContain('P4 内容')
     }
+  })
+
+  it('03 曲线点击联动：真实肌肉系列名命中肌肉卡（vasmed_r → mus-vasmed-r）', () => {
+    const idx = indexKnowledge(contentCards)
+    expect(findSeriesCard('vasmed_r', idx)?.id).toBe('mus-vasmed-r')
   })
 })

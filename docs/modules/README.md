@@ -16,7 +16,7 @@
 | 04 | 知识点标注与讲解 | [04-knowledge-annotation.md](04-knowledge-annotation.md) | `web/src/knowledge/`、`web/src/data.ts`、`web/src/store.ts` |
 | 05 | 模型转换流水线 | [05-model-pipeline.md](05-model-pipeline.md) | `pipeline/` |
 | 06 | 仿真预计算流水线 | [06-simulation-pipeline.md](06-simulation-pipeline.md) | `pipeline/simulate_scene.py` |
-| 07 | 知识库内容管理 | [07-knowledge-base.md](07-knowledge-base.md) | `content/knowledge/` |
+| 07 | 知识库内容管理 | [07-knowledge-base.md](07-knowledge-base.md) | `content/knowledge/ + web/scripts/validate-knowledge.mjs` |
 | 08 | 部署与性能优化 | [08-deployment-performance.md](08-deployment-performance.md) | 部署配置 / Service Worker |
 
 ## 审查用法

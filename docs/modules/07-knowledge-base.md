@@ -1,4 +1,4 @@
-# 07 知识库内容管理 `[状态: 设计已批准]`
+# 07 知识库内容管理 `[P4 已实现]`
 
 ## 核心定位
 
@@ -52,3 +52,26 @@
 - 首批 ≥25 张卡（5 场景 × ≥5 张），医学方向审核通过。
 - 校验脚本可拦截：非法 ID、缺字段、失效引用三类错误（构造反例测试）。
 - 新增一张卡仅涉及 JSON 编辑 + 重新部署，无代码改动。
+
+## 实现对齐 `[P4 已实现]`
+
+- **内容源**：`content/knowledge/knowledge.json`，41 张正式教学卡（关键帧卡 10 + 部位卡 14 + 肌肉卡 17），
+  每张卡带 note 审查状态标注；构建期由 sync-assets 同步为 `web/public/data/knowledge/knowledge.json`
+  （该产物 gitignore，`content/` 为唯一编辑源）。
+- **校验**：`web/scripts/validate-knowledge.mjs`（CLI，exit 0 通过 / 1 校验错误 / 2 用法或路径缺失），
+  纯函数实现于 `web/scripts/lib/validate-knowledge.mjs`，vitest 反例测试见 `web/src/tests/knowledgeValidate.test.ts`。错误码清单：
+  - errors（任一出现即校验失败）：`MISSING_ID` / `DUPLICATE_ID`（卡 id 缺失或重复）、
+    `INVALID_PART_ID`（partId 不在 rig-meta id 集）、`KEYFRAME_NO_CARD`（场景关键帧 cardId 无对应卡）、
+    `MISSING_TERM` / `MISSING_SECTION`（术语或 anatomy/biomech/clinic 缺字段）、
+    `MISSING_REFS`（refs 缺失或不足 2 条）、`INVALID_REF_URL`（url 存在但非 http(s):// 开头）、
+    `MISSING_REF_ASSET`（type=image 且 src 资源文件不存在，仅在提供 assetsExist 回调时检查）
+  - warnings（不失败）：`MUSCLE_CARD_NOT_IN_SCENES`（肌肉卡 cardId 不在任何场景 muscles，03 曲线点击不联动）、
+    `MISSING_NOTE`（缺审查状态标注）
+- **构建门**：`npm run sync-assets` 在复制 knowledge 前先跑同一校验，errors 非空即中止同步（防脏数据上线）。
+- **refs 实际契约**：`{ label: string; url?: string }`——label 为完整书目条目文本，url 存在时渲染为
+  `<a target="_blank" rel="noopener noreferrer">` 外链，否则渲染纯文本。与设计稿
+  `{ type: "image|link", src, caption }` 的偏差说明：首批内容以文字书目引用为主、无图片附件需求，
+  故简化为 label/url 双字段；`type=image` + `src` 仅作为 MISSING_REF_ASSET 校验的扩展契约保留，前端暂不消费。
+- **审查流程**：内容经独立 AI 预审（逐卡术语/数值/临床/一致性四维度 + 场景数据交叉核对 + 文献真实性核查），
+  修订与逐卡结论记录见 `content/knowledge/REVIEW.md`；**正式医学专家终审待用户安排签署**，
+  签署前内容仅供教学演示用途。

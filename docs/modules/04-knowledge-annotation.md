@@ -73,3 +73,4 @@
 - 与设计的偏差：内容为 stub（`web/public/data/knowledge/knowledge.json` 16 张，含 10 张关键帧卡 +
   6 张部位卡，P4 补全并做医学方向审核）；note 字段承载 stub 标注（「P4 医学审核」提示）；
   移动端形态落地为知识 Tab 内底部抽屉（≤900px），桌面为右侧栏卡片
+- P4：内容转正 41 张，note 语义为审查状态标注

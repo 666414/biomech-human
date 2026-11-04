@@ -46,8 +46,6 @@ export default function KnowledgePanel({ onLocate }: { onLocate: (partId: string
       )}
       {source?.kind === 'series' && <div className="knowledge-meta">曲线系列：{source.name}</div>}
 
-      {card.note && <div className="knowledge-note">{card.note}</div>}
-
       <dl className="knowledge-body">
         {SECTIONS.map(({ key, title }) => (
           <div key={key} className="knowledge-section">
@@ -62,7 +60,7 @@ export default function KnowledgePanel({ onLocate }: { onLocate: (partId: string
           {card.refs.map((ref) => (
             <li key={ref.label}>
               {ref.url ? (
-                <a href={ref.url} target="_blank" rel="noreferrer">
+                <a href={ref.url} target="_blank" rel="noopener noreferrer">
                   {ref.label}
                 </a>
               ) : (
@@ -72,6 +70,8 @@ export default function KnowledgePanel({ onLocate }: { onLocate: (partId: string
           ))}
         </ul>
       )}
+
+      {card.note && <div className="knowledge-note">{card.note}</div>}
 
       {card.partId && (
         <button

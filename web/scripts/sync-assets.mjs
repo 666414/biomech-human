@@ -66,13 +66,14 @@ async function syncKnowledgeDir(srcDir, destDir) {
       assetsExist: makeAssetsExist(baseDir),
     })
     for (const w of warnings) {
-      const where = [w.scene, w.cardId ? `卡 "${w.cardId}"` : `#${w.index ?? '?'}`].filter(Boolean).join(' ')
-      console.warn(`[warn] [${w.code}] ${where} ${w.message}`)
+      // 卡定位由 message 内的 tag（卡 "id" / 第 N 张卡）承载，where 只补场景，避免输出重复卡名
+      const where = w.scene ? ` ${w.scene}` : ''
+      console.warn(`[warn] [${w.code}]${where} ${w.message}`)
     }
     if (!ok) {
       for (const e of errors) {
-        const where = [e.scene, e.cardId ? `卡 "${e.cardId}"` : `#${e.index ?? '?'}`].filter(Boolean).join(' ')
-        console.error(`[error] [${e.code}] ${where} ${e.message}`)
+        const where = e.scene ? ` ${e.scene}` : ''
+        console.error(`[error] [${e.code}]${where} ${e.message}`)
       }
       console.error(`\n[fail] 知识库校验失败（${errors.length} 个错误），中止同步`)
       process.exit(1)
