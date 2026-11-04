@@ -7,7 +7,8 @@
 // - 产物 < 8MB（P5 验收线），超限 exit 1。
 // - 源未变（sha256 一致）且产物通过 magic+hash 校验 → 跳过压缩（stamp 在 node_modules/.cache/，不入库）。
 //
-// 用法：node scripts/compress-glb.mjs（独立运行）或被 sync-assets.mjs 调用 compressHumanGlb()。
+// 用法：node scripts/compress-glb.mjs（独立运行）或被 sync-assets.mjs 调用 compressHumanGlb()；
+// --force 忽略 stamp 缓存强制重压（npm run compress-glb -- --force）。
 import { copyFile, mkdir, readFile, rename, rm, stat, writeFile } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 import { createHash } from 'node:crypto'
@@ -28,9 +29,11 @@ const DEST_GLB = path.join(webRoot, 'public', 'data', 'models', 'human.glb')
 /** 压缩跳过判定 stamp（记录源/产物 hash 与大小；node_modules 天然不入库且可随时重建） */
 const STAMP_FILE = path.join(webRoot, 'node_modules', '.cache', 'human-glb-draco.json')
 
-// three 自带 Draco wasm 解码器 → public/draco/（DRACOLoader.setDecoderPath('./draco/') 相对路径命中）
+// three 自带 Draco 解码器 → public/draco/（DRACOLoader.setDecoderPath('./draco/') 相对路径命中）。
+// wasm 双件是常规路径；draco_decoder.js 是无 WebAssembly 环境的 JS fallback（DRACOLoader
+// _initDecoder 的 useJS 分支会拉取），一并就位避免 fallback 404。
 const DECODER_SRC_DIR = path.join(webRoot, 'node_modules', 'three', 'examples', 'jsm', 'libs', 'draco', 'gltf')
-const DECODER_FILES = ['draco_decoder.wasm', 'draco_wasm_wrapper.js']
+const DECODER_FILES = ['draco_decoder.wasm', 'draco_wasm_wrapper.js', 'draco_decoder.js']
 const DECODER_DEST_DIR = path.join(webRoot, 'public', 'draco')
 
 /** @gltf-transform/cli 的 bin 入口（经 exports 主入口上溯定位，避免 bin 路径硬编码失败） */
@@ -92,10 +95,11 @@ async function destIsValid(outHash) {
 
 /**
  * 压缩 human.glb：源未变、产物存在且通过 magic+hash 校验 → 跳过；
+ * force=true（--force）忽略缓存强制重压；
  * 否则 gltf-transform draco 压缩，超过 8MB 上限 exit 1。
  * 返回产物字节数（源缺失时返回 0）。
  */
-export async function compressHumanGlb() {
+export async function compressHumanGlb(force = false) {
   if (!existsSync(SRC_GLB)) {
     console.log(`[skip] ${path.relative(repoRoot, SRC_GLB)} 不存在，跳过压缩`)
     return 0
@@ -104,11 +108,11 @@ export async function compressHumanGlb() {
   const srcHash = createHash('sha256').update(srcBuf).digest('hex')
 
   const stamp = await readStamp()
-  if (existsSync(DEST_GLB) && stamp?.srcHash === srcHash && (await destIsValid(stamp.outHash))) {
+  if (!force && existsSync(DEST_GLB) && stamp?.srcHash === srcHash && (await destIsValid(stamp.outHash))) {
     console.log(`[skip] human.glb 源未变，沿用已有 Draco 压缩产物 (${stamp.outBytes} bytes)`)
     return stamp.outBytes
   }
-  console.log('[info] human.glb 需要压缩（源变更或产物缺失/失效）')
+  console.log(force ? '[info] human.glb 强制重压（--force）' : '[info] human.glb 需要压缩（源变更或产物缺失/失效）')
 
   await mkdir(path.dirname(DEST_GLB), { recursive: true })
   // 临时文件必须保留 .glb 扩展：gltf-transform CLI 按扩展名选择写出格式，
@@ -150,6 +154,6 @@ export async function compressHumanGlb() {
 
 // 直接运行：压缩 + 确保 decoder 就位（sync-assets 集成时同样按此顺序调用）
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  await compressHumanGlb()
+  await compressHumanGlb(process.argv.includes('--force'))
   await ensureDracoDecoders()
 }

@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
+    "compress-glb": "node scripts/compress-glb.mjs",
     "sync-assets": "node scripts/sync-assets.mjs",
     "validate:knowledge": "node scripts/validate-knowledge.mjs --knowledge ../content/knowledge --rigmeta public/data/models/rig-meta.json --scenes public/data/scenes",
     "preview": "vite preview"
