@@ -65,6 +65,10 @@
   - 降质档位：high 档 pixelRatio ≤ 1.5，low 档关抗锯齿（上下文创建时生效）+ pixelRatio 1；
     `?quality=low|high` 显式指定，`?lite=1` 等价 low，缺省按视口宽 < 768 或 DPR > 2.5 自动判低
   - 拾取用 click 语义（pointerdown/up 位移 < 5px），避免 OrbitControls 拖拽视角误触部位选择
-- 与设计的偏差：Draco 未启用（P1 产出未压缩 glb，压缩列入 P5）；场景未启用阴影贴图
-  （光照为环境光 + 方向光，无阴影系统，「低端关阴影」缺省满足）；视角预设落地为
-  正面/侧面/复位三档（复位 = 初始机位），重点部位特写由知识卡「在模型中定位」承担
+  - **Draco 已启用（P5）**：`GLTFLoader.setDRACOLoader()` 接模块级单例 `DRACOLoader`，
+    `setDecoderPath('./draco/')`（相对路径，适配任意 `base` / 子目录部署）；解码器三件套
+    （`draco_decoder.js` / `.wasm` / `draco_wasm_wrapper.js`）由构建期 `sync-assets` 复制到
+    `web/public/draco/`。模型 10.0MB → 0.62MB，加载超时兜底按实测字节数（646,860）估算进度，
+    `loadGltfOnce` 失败自动重试 1 次（1.5s 后）
+- 与设计的偏差：场景未启用阴影贴图（光照为环境光 + 方向光，无阴影系统，「低端关阴影」缺省满足）；
+  视角预设落地为正面/侧面/复位三档（复位 = 初始机位），重点部位特写由知识卡「在模型中定位」承担

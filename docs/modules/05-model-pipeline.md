@@ -66,3 +66,16 @@ MS-Human-700.xml + STL
   human.glb 10,049,520 字节（9.58MB），校验通过（与 Locomotion 共享同一套几何资产）。
   体积验收线（8MB）：P1 未压缩超 8MB，标记为 P5 Draco 后复验（Draco 预期压缩 60-80%，9.6MB → 预计 <4MB）；
   8MB 线语义为约束 Locomotion 教学模型。
+
+### Draco 复验（P5 已完成）
+
+- 管线：`web/scripts/compress-glb.mjs`（`@gltf-transform/cli` 的 `draco` 子命令，**不做 optimize**，
+  避免 flatten/join 破坏节点层级）；`npm run sync-assets` 内联调用，产物落 `web/public/data/models/human.glb`，
+  原始未压缩 glb 保留在 `pipeline/out/fullbody/` 不动。
+- 实测：**10,049,520 B → 646,860 B（-93.6%，0.62MB）**，8MB 线通过且余量 12 倍。
+- 不变性验证：压缩前后 glb JSON chunk 的节点数（212）、节点名（= rig-meta id）、层级与 TRS 变换完全一致
+  （matrix→TRS 等价改写最大误差 2.2e-16）；`?fkcheck=1` 在压缩产物上仍为 1e-7 m 级误差。
+- 幂等与守卫：源 glb 的 sha256 与产物 stamp 存 `node_modules/.cache/`，源未变则跳过；`--force` 强制重压；
+  产物内置 GLB magic 校验 + 8MB 超限直接 exit 1（构建期兜底）。
+- 解码器：three r187 的 `draco_decoder.js` / `draco_decoder.wasm` / `draco_wasm_wrapper.js` 由
+  `ensureDracoDecoders()` 复制到 `web/public/draco/`，运行时按相对路径 `./draco/` 加载。
