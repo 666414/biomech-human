@@ -1,11 +1,30 @@
 import react from '@vitejs/plugin-react'
+import type { Plugin } from 'vite'
 import { defineConfig } from 'vitest/config'
+
+/**
+ * 剔除构建冗余：three 的 DRACOLoader 在模块级用 `new URL('../libs/draco/…', import.meta.url)`
+ * 引用了自带的两套解码器，Vite 因此无条件产出 `assets/draco_*`（约 1.33 MB）。
+ * 运行时经 `setDecoderPath('./draco/')` 指向 `public/draco/` 下的同名解码器（构建时由
+ * sync-assets 复制），这些 assets 副本永远不会被请求，故在写盘前从产物中删除。
+ */
+function dropEmittedDracoDecoders(): Plugin {
+  return {
+    name: 'drop-emitted-draco-decoders',
+    apply: 'build',
+    generateBundle(_options, bundle) {
+      for (const fileName of Object.keys(bundle)) {
+        if (/^assets\/draco_(decoder|wasm_wrapper)-/.test(fileName)) delete bundle[fileName]
+      }
+    },
+  }
+}
 
 // https://vite.dev/config/
 export default defineConfig({
-  // 相对路径基座（P5 Task 2）：产物可在任意子目录 / 静态服务器 / U 盘 file:// 部署
+  // 相对路径基座（P5 Task 2）：产物可在任意子目录 / 静态服务器部署
   base: './',
-  plugins: [react()],
+  plugins: [react(), dropEmittedDracoDecoders()],
   build: {
     rollupOptions: {
       output: {

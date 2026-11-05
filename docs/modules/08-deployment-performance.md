@@ -123,12 +123,21 @@
 **不采取的措施**：不做「把模型加载/图表初始化推迟到 TTI 之后」的改动——那只是把耗时挪出
 Lighthouse 的统计窗口，真实用户等待时间不变，属于刷分而非优化。
 
-### 4. 已知构建冗余
+### 4. 构建冗余已剔除
 
-three r187 的 `DRACOLoader` 用 `new URL('../libs/draco/…', import.meta.url)` 静态引用解码器，
-Vite 会把两套（`libs/draco` 与 `libs/draco/gltf`）解码器作为 `dist/assets/draco_*` 产出（约 1.33 MB）。
-本项目的 `setDecoderPath('./draco/')` 指向 `public/draco/`，这些副本**永远不会被请求**，只占构建目录体积，
-不进入首屏传输；如需极致瘦身可在后续用自定义构建插件剔除。
+three r187 的 `DRACOLoader` 在模块级用 `new URL('../libs/draco/…', import.meta.url)` 静态引用解码器，
+Vite 会把两套（`libs/draco` 与 `libs/draco/gltf`）解码器作为 `dist/assets/draco_*` 产出
+（4 个文件、约 1.0 MB）。本项目的 `setDecoderPath('./draco/')` 指向 `public/draco/`，
+这些副本**永远不会被请求**，只占构建目录体积。
+
+已在 `web/vite.config.ts` 增加构建插件 `drop-emitted-draco-decoders`（`generateBundle` 阶段从产物中
+删除 `assets/draco_(decoder|wasm_wrapper)-*`）。验证：
+
+- 产物 `dist/assets/` 已无 `draco_*`，`dist/draco/` 三件套完整（512 kB js + 192 kB wasm + 58 kB wrapper）
+- 构建总字节 3,577,767 B（约 3.58 MB），较剔除前少约 1.0 MB
+- 浏览器实测（`?fkcheck=1`）：`data-debug` 中 `modelLoaded=true`、`bodyCount=80`，控制台无 draco 解码 404
+- 依据：`setDecoderPath('./draco/')` 会同时覆盖 js / wasm / dep_js 三条路径（three r187 `DRACOLoader` 源码），
+  模块级默认 URL 仅在未显式设置路径时才生效
 
 ### 5. 部署通道（详见 `web/DEPLOY.md`）
 
