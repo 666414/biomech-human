@@ -36,9 +36,39 @@ export interface RigPart {
   joints: RigJoint[]
 }
 
+/** 非骨骼图层的可视节点（挂在 body 下的皮肤胶囊等） */
+export interface RigAttachment {
+  /** glb 节点名（如 femur_r__femur_skin_r） */
+  id: string
+  /** 所属 body 节点 id */
+  parent: string
+  /** 图层分组（非骨骼） */
+  group: Exclude<PartGroup, 'skeleton'>
+  names: { en: string; zh: string }
+}
+
 /** rig-meta.json：模型刚体层级与关节定义 */
 export interface RigMeta {
   parts: RigPart[]
+  /** 非骨骼图层节点（旧版 rig-meta 无此字段 → 视为无皮肤/肌肉几何） */
+  attachments?: RigAttachment[]
+}
+
+/** 肌肉示意线的一个附着点（body 局部坐标） */
+export interface MusclePoint {
+  body: string
+  pos: [number, number, number]
+}
+
+/** 单块肌肉的示意折线（由肌腱站点顺序展开） */
+export interface MuscleDef {
+  tendon: string
+  points: MusclePoint[]
+}
+
+/** muscle-meta.json：执行器名 → 肌肉折线 */
+export interface MuscleMeta {
+  muscles: Record<string, MuscleDef>
 }
 
 /** 场景逐帧数据序列（行数 = frames） */

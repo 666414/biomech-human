@@ -1,4 +1,9 @@
-"""MuJoCo MJCF 解析：处理 <include> 文本级合并，产出 body 树与网格资产表。"""
+"""MuJoCo MJCF 解析：处理 <include> 文本级合并，产出 body 树、网格资产表、
+站点（site）、肌腱（tendon spatial）与执行器（actuator）映射。
+
+MJCF 的 <default class="x"> 会为同类元素提供缺省属性（例如皮肤胶囊的
+type="capsule" / group="1"），因此解析 geom 前必须先展开默认类。
+"""
 import os
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
@@ -20,7 +25,8 @@ class Body:
     pos: list
     quat: list  # MuJoCo 顺序 w x y z
     joints: list
-    geoms: list  # [{name, type, mesh, file, pos, quat}]
+    geoms: list
+    sites: list  # [{name, pos}]，pos 为 body 局部系
     children: list
 
 
@@ -45,7 +51,37 @@ def _resolve_includes(elem, base_dir):
             _resolve_includes(child, base_dir)
 
 
-def _parse_body(el):
+def _walk_default(elem, inherited, class_name, table):
+    """递归展开 <default>：table[class] = {tag: {attr: value}}，子类继承父类。"""
+    own = {tag: dict(attrs) for tag, attrs in inherited.items()}
+    for child in elem:
+        if child.tag == "default":
+            continue
+        own[child.tag] = {**own.get(child.tag, {}), **child.attrib}
+    table[class_name] = own
+    for child in elem:
+        if child.tag == "default":
+            _walk_default(child, own, child.get("class"), table)
+
+
+def _collect_defaults(root):
+    """返回 {class 名: {tag: {attr: value}}}；根 <default>（无 class）键为 None。"""
+    table = {}
+    for d in root.findall("default"):
+        _walk_default(d, {}, None, table)
+    return table
+
+
+def _merged_attrs(defaults, class_name, tag, own_attrs):
+    """合并：全局默认 → 该类默认 → 元素自身属性（后者覆盖前者）。"""
+    merged = dict(defaults.get(None, {}).get(tag, {}))
+    if class_name:
+        merged.update(defaults.get(class_name, {}).get(tag, {}))
+    merged.update(own_attrs)
+    return merged
+
+
+def _parse_body(el, defaults):
     joints = [
         Joint(
             name=j.get("name"),
@@ -56,17 +92,29 @@ def _parse_body(el):
         )
         for j in el.findall("joint")
     ]
-    geoms = [
-        {
-            "name": g.get("name"),
-            "type": g.get("type", "sphere"),
-            "mesh": g.get("mesh"),
-            "file": None,  # 由 meshes 表回填
-            "pos": _floats(g.get("pos"), (0.0, 0.0, 0.0)),
-            "quat": _floats(g.get("quat"), (1.0, 0.0, 0.0, 0.0)),
-        }
-        for g in el.findall("geom")
-        if g.get("type") == "mesh" and g.get("mesh")
+    geoms = []
+    for g in el.findall("geom"):
+        attrs = _merged_attrs(defaults, g.get("class"), "geom", g.attrib)
+        geoms.append(
+            {
+                "name": g.get("name"),
+                "type": attrs.get("type", "sphere"),
+                # 默认类名（皮肤胶囊由 class="skin" 提供 type/group）
+                "class": g.get("class"),
+                "mesh": attrs.get("mesh"),
+                "file": None,  # 由 meshes 表回填
+                "size": _floats(attrs.get("size"), (0.0, 0.0, 0.0))
+                if attrs.get("size")
+                else None,
+                "pos": _floats(attrs.get("pos"), (0.0, 0.0, 0.0)),
+                "quat": _floats(attrs.get("quat"), (1.0, 0.0, 0.0, 0.0)),
+                "group": int(attrs.get("group", 0)),
+            }
+        )
+    sites = [
+        {"name": s.get("name"), "pos": _floats(s.get("pos"), (0.0, 0.0, 0.0))}
+        for s in el.findall("site")
+        if s.get("name")
     ]
     return Body(
         name=el.get("name"),
@@ -74,7 +122,8 @@ def _parse_body(el):
         quat=_floats(el.get("quat"), (1.0, 0.0, 0.0, 0.0)),
         joints=joints,
         geoms=geoms,
-        children=[_parse_body(b) for b in el.findall("body")],
+        sites=sites,
+        children=[_parse_body(b, defaults) for b in el.findall("body")],
     )
 
 
@@ -91,12 +140,57 @@ def collect_body_names(bodies):
     return names
 
 
+def _collect_sites(bodies):
+    """site 名 → {body, pos}（pos 为 body 局部系）。"""
+    out = {}
+
+    def walk(b):
+        for s in b.sites:
+            out[s["name"]] = {"body": b.name, "pos": s["pos"]}
+        for c in b.children:
+            walk(c)
+
+    for r in bodies:
+        walk(r)
+    return out
+
+
+def _collect_tendons(root):
+    """spatial 肌腱名 → [site 名]（按声明顺序；<geom> 包裹点不参与示意线）。"""
+    out = {}
+    for tendon in root.iter("tendon"):
+        for sp in tendon.findall("spatial"):
+            name = sp.get("name")
+            if not name:
+                continue
+            pts = []
+            for child in sp:
+                if child.tag == "site" and child.get("site"):
+                    pts.append(child.get("site"))
+            if len(pts) >= 2:
+                out[name] = pts
+    return out
+
+
+def _collect_actuators(root):
+    """执行器名 → tendon 名（只保留引用肌腱的执行器；MuJoCo 的肌肉均由肌腱驱动）。"""
+    out = {}
+    for actuator in root.iter("actuator"):
+        for el in actuator:
+            name = el.get("name")
+            tendon = el.get("tendon")
+            if name and tendon:
+                out[name] = tendon
+    return out
+
+
 def parse_mjcf(xml_path):
-    """返回 {"bodies": [Body...], "meshes": {name: file}}，路径相对 XML 所在目录（上游为仓库根）。"""
+    """返回 {bodies, meshes, sites, tendons, actuators}；路径相对 XML 所在目录（上游为仓库根）。"""
     xml_path = os.path.normpath(os.path.abspath(xml_path))
     base_dir = os.path.dirname(xml_path)
     root = ET.parse(xml_path).getroot()
     _resolve_includes(root, base_dir)
+    defaults = _collect_defaults(root)
 
     meshes = {}
     for asset in root.iter("asset"):
@@ -104,7 +198,7 @@ def parse_mjcf(xml_path):
             if m.get("name") and m.get("file"):
                 meshes[m.get("name")] = m.get("file").replace("\\", "/")
 
-    bodies = [_parse_body(b) for b in root.find("worldbody").findall("body")]
+    bodies = [_parse_body(b, defaults) for b in root.find("worldbody").findall("body")]
 
     def fill_files(b):
         for g in b.geoms:
@@ -114,4 +208,10 @@ def parse_mjcf(xml_path):
 
     for r in bodies:
         fill_files(r)
-    return {"bodies": bodies, "meshes": meshes}
+    return {
+        "bodies": bodies,
+        "meshes": meshes,
+        "sites": _collect_sites(bodies),
+        "tendons": _collect_tendons(root),
+        "actuators": _collect_actuators(root),
+    }

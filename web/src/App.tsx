@@ -83,7 +83,8 @@ function App() {
   const [layerOpacity, setLayerOpacity] = useState<Record<PartGroup, number>>({
     skeleton: 1,
     muscle: 1,
-    skin: 1,
+    // 皮肤为半透明外壳：全不透明会完全遮住骨骼，默认 0.25（近似源模型 rgba 0.2）
+    skin: 0.25,
   })
   // 全屏加载态：模型加载进度经 Viewport onProgress 上报给遮罩；视口内浮层保留
   // 供「模型失败 → 重试」流程使用（App 遮罩此时已收起）
@@ -136,9 +137,11 @@ function App() {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  // 帧分发：t 变化 → Viewport setPose（charts/关键帧联动接同一 frame）
+  // 帧分发：t 变化 → Viewport setPose + 肌肉激活着色（charts/关键帧联动接同一 frame）
   useEffect(() => {
-    if (frame) viewportRef.current?.setPose(frame.jointAngles)
+    if (!frame) return
+    viewportRef.current?.setPose(frame.jointAngles)
+    viewportRef.current?.setMuscleAct(frame.muscleAct)
   }, [frame])
 
   // 触发路径 2：关键帧命中自动弹卡（checkKeyframeCard 去重：同区间不重复弹，

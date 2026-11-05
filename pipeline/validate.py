@@ -19,12 +19,20 @@ def validate_output(tree, meta, glb_path):
         if p["parent"] not in meta_id_set:
             issues.append(f"rig-meta 节点 {p['id']} 的 parent 不存在: {p['parent']}")
 
+    attachment_ids = [a["id"] for a in meta.get("attachments", [])]
+    for a in meta.get("attachments", []):
+        if a["parent"] not in meta_id_set:
+            issues.append(f"attachment {a['id']} 的 parent 不存在: {a['parent']}")
+
     try:
         scene = trimesh.load(glb_path)
         nodes = set(scene.graph.nodes)
         missing = [n for n in xml_names if n not in nodes]
         if missing:
             issues.append(f"GLB 缺少节点: {missing[:10]}")
+        missing_attachments = [n for n in attachment_ids if n not in nodes]
+        if missing_attachments:
+            issues.append(f"GLB 缺少图层节点: {missing_attachments[:10]}")
     except Exception as e:  # 文件不存在/损坏
         issues.append(f"GLB 无法加载: {e}")
 

@@ -100,6 +100,12 @@ total += await syncFile(
   path.join(publicData, 'models'),
   'rig-meta.json',
 )
+// 肌肉示意线数据（执行器 → 肌腱站点路径），与 rig-meta 同属模型契约
+total += await syncFile(
+  path.join(repoRoot, 'pipeline', 'out', 'fullbody', 'muscle-meta.json'),
+  path.join(publicData, 'models'),
+  'muscle-meta.json',
+)
 total += await syncJsonDir(
   path.join(repoRoot, 'pipeline', 'out', 'scenes'),
   path.join(publicData, 'scenes'),

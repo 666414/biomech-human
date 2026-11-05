@@ -79,3 +79,46 @@ MS-Human-700.xml + STL
   产物内置 GLB magic 校验 + 8MB 超限直接 exit 1（构建期兜底）。
 - 解码器：three r187 的 `draco_decoder.js` / `draco_decoder.wasm` / `draco_wasm_wrapper.js` 由
   `ensureDracoDecoders()` 复制到 `web/public/draco/`，运行时按相对路径 `./draco/` 加载。
+
+### 图层几何导出（P5 修复：肌肉/皮肤滑杆生效）
+
+**故障现象**：顶栏「肌肉」「皮肤」滑杆无任何视觉变化。
+
+**根因**：glb 只有骨骼网格、rig-meta 只有 `skeleton` 分组 → `setLayerVisible/setLayerOpacity`
+的过滤循环体永不执行（无对象可改）。上游两处成因：
+
+1. `mjcf_parser._parse_body` 只保留 `type="mesh"` 的 geom，而源模型的皮肤是
+   `class="skin"` 提供的 `type="capsule"`（默认类属性），解析阶段即被丢弃；
+2. MuJoCo 模型里肌肉**没有可视几何**（`Muscle/*.xml` 只有 `<general class="muscle" tendon=...>` 执行器），
+   肌肉的解剖路径在 `Tendon/*.xml` 的 `<spatial>` 站点中；
+3. `rig_meta._group_of` 仅按 body 名判组，80 个 body 全是骨骼名，永远得不到 muscle/skin。
+
+**修复内容**：
+
+- `mjcf_parser.py`：新增 `<default class="x">` 展开（全局默认 → 类默认 → 元素属性），
+  解析 geom 的 `type/size/group/class`；额外产出 `sites`（site 名 → body + 局部坐标）、
+  `tendons`（spatial 肌腱名 → site 引用顺序）、`actuators`（执行器名 → 肌腱名）。
+- `mesh_assembler.py`：皮肤胶囊（`class="skin"` + `type="capsule"` + `size=[r, half_len]`）
+  用 `trimesh.creation.capsule(height=2*half_len)` 生成节点 `<body>__<geom>`（如
+  `femur_r__femur_skin_r`），挂在对应 body 下并随骨骼运动。
+- `rig_meta.py`：`parts` 仍为 80 个 body（骨骼，保持 `parts.length === 80` 的既有契约），
+  新增顶层 `attachments: [{id, parent, group:'skin', names:{en, zh}}]`（14 条，zh 由父部位名派生）。
+- `muscle_meta.py`（新）：执行器 → 肌腱 → 站点折线，输出
+  `muscle-meta.json`：`{"muscles": {"<执行器名>": {"tendon", "points":[{"body","pos"}]}}}`，
+  覆盖 700 个执行器；前端只渲染当前场景 `muscles` 名单（6–8 块）。
+- `validate.py`：新增附件节点存在性与 parent 有效性校验。
+
+**复核命令与实测**：
+
+```
+python -m pipeline.convert_model --xml assets/MS-Human-700/MS-Human-700.xml \
+  --root assets/MS-Human-700 --out pipeline/out/fullbody
+```
+
+`bodies=80 geoms=146 skin_nodes=14 muscles=700`，human.glb 10,085,300 B →
+Draco 后 **671,448 B**；glb 节点数 226（212 骨骼 + 14 皮肤），`rig-meta.json` 64KB、
+`muscle-meta.json` 178KB（gzip 后约 25KB）。
+
+**已知边界**：Primary 模型只有下肢/足部皮肤几何（`Body_Primary/Body_Leg_Foot_{r,l}.xml`
+各 7 个胶囊），躯干与上肢在源模型中不含皮肤；肌肉为肌腱站点折线示意管（非解剖肌肉网格），
+且只取 `<site>` 参考点、跳过 `<geom>` 包裹点。

@@ -9,11 +9,22 @@ import * as THREE from 'three'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import type { JointAngles, PartGroup, RigMeta } from '../types'
+import type { JointAngles, MuscleMeta, PartGroup, RigMeta } from '../types'
 import { applyPose, buildPoseMap, type PoseMap } from './poseMap'
 
 const HIGHLIGHT_COLOR = 0x33ddff
 const GHOST_OPACITY = 0.15
+
+/** 皮肤胶囊基色（源模型 class="skin" 的 rgba 0.8 0.7 0.5，收敛为类肤色） */
+const SKIN_COLOR = 0xd9b38c
+/** 肌肉示意管：静息暗红 → 激活亮红（按 %MVC 线性插值） */
+const MUSCLE_REST_COLOR = 0x6b2c2c
+const MUSCLE_ACTIVE_COLOR = 0xff4a30
+/** 肌肉管半径（m） */
+const MUSCLE_RADIUS = 0.009
+/** 激活度配色的端点色（按 %MVC 在两者间插值） */
+const MUSCLE_REST = new THREE.Color(MUSCLE_REST_COLOR)
+const MUSCLE_ACTIVE = new THREE.Color(MUSCLE_ACTIVE_COLOR)
 
 /** 模型加载失败自动重试（下载/解析失败任意原因，含网络偶发 ERR_ABORTED）：上限次数与延迟 */
 const MODEL_LOAD_MAX_RETRIES = 1
@@ -48,6 +59,8 @@ export interface DebugState {
   bodyCount: number
   /** 渲染循环已执行帧数（RAF 计数） */
   renderFrames: number
+  /** 各图层可绘制对象数（骨骼/皮肤=网格数，肌肉=管段数） */
+  layerMeshes: Record<PartGroup, number>
 }
 
 /** 高亮会话开始时记录的材质原始属性（恢复用） */
@@ -66,6 +79,23 @@ export type ViewPreset = 'front' | 'side' | 'reset'
 /** 画质档位（01 文档降质预设）：low 关抗锯齿 + 像素比上限 1 */
 export type Quality = 'low' | 'high'
 
+/** 单块肌肉的运行时几何：折线点绑定到 body 节点，每帧按世界坐标更新管段 */
+interface MuscleSegment {
+  name: string
+  material: THREE.MeshStandardMaterial
+  /** 相邻折线点之间的管段（长度 = points.length - 1） */
+  meshes: THREE.Mesh[]
+  points: Array<{ node: THREE.Object3D | null; local: THREE.Vector3 }>
+  /** 每帧复用的世界坐标缓冲 */
+  world: THREE.Vector3[]
+}
+
+// 肌肉管段更新的模块级暂存（避免每帧分配）
+const _segA = new THREE.Vector3()
+const _segB = new THREE.Vector3()
+const _segDir = new THREE.Vector3()
+const _cylAxis = new THREE.Vector3(0, 1, 0) // CylinderGeometry 轴向 +Y
+
 export class SceneManager {
   readonly scene: THREE.Scene
   readonly camera: THREE.PerspectiveCamera
@@ -80,6 +110,24 @@ export class SceneManager {
   /** 当前高亮会话的材质快照 */
   private snapshots: MaterialSnapshot[] = []
   private highlightedPart: string | null = null
+
+  /** 图层绑定（模型 + rig 就绪后建立）：mesh → 图层分组 */
+  private meshGroup = new Map<THREE.Mesh, PartGroup>()
+  /** 图层控件状态（控件可能早于模型就绪下发，先存后应用） */
+  private layerVisible: Record<PartGroup, boolean> = {
+    skeleton: true,
+    muscle: true,
+    skin: true,
+  }
+  private layerOpacity: Record<PartGroup, number> = { skeleton: 1, muscle: 1, skin: 1 }
+  /** 肌肉示意线数据与运行时几何 */
+  private muscleMeta: MuscleMeta | null = null
+  private muscleRoot: THREE.Group | null = null
+  private muscleSegments: MuscleSegment[] = []
+  private activeMuscleNames = new Set<string>()
+  private muscleActivation = new Map<string, number>()
+  /** 肌肉管段共享几何（单位圆柱，运行时用 scale 拉长/变粗） */
+  private segmentGeometry = new THREE.CylinderGeometry(1, 1, 1, 8, 1)
 
   private raycaster = new THREE.Raycaster()
   private rafId = 0
@@ -289,12 +337,23 @@ export class SceneManager {
       lastError: this.lastError,
       bodyCount: this.bodyCount,
       renderFrames: this.renderFrames,
+      layerMeshes: this.countLayerMeshes(),
     }
+  }
+
+  /** 各图层可绘制对象数（骨骼/皮肤按网格计，肌肉按管段计） */
+  private countLayerMeshes(): Record<PartGroup, number> {
+    const counts: Record<PartGroup, number> = { skeleton: 0, muscle: 0, skin: 0 }
+    for (const group of this.meshGroup.values()) counts[group] += 1
+    for (const seg of this.muscleSegments) counts.muscle += seg.meshes.length
+    return counts
   }
 
   private tryBuildPoseMap(): void {
     if (this.modelRoot && this.rig && !this.poseMapState) {
       this.poseMapState = buildPoseMap(this.modelRoot, this.rig)
+      this.bindLayers()
+      this.rebuildMuscles()
     }
   }
 
@@ -337,9 +396,10 @@ export class SceneManager {
 
   // ---------- 姿态 ----------
 
-  /** 每帧驱动：applyPose 直接改局部变换，无对象分配 */
+  /** 每帧驱动：applyPose 直接改局部变换，无对象分配；随后刷新肌肉管段 */
   setPose(q: JointAngles): void {
     if (this.poseMapState) applyPose(this.poseMapState, q)
+    this.updateMuscleGeometry()
   }
 
   // ---------- 拾取与高亮 ----------
@@ -422,27 +482,198 @@ export class SceneManager {
 
   // ---------- 分层 ----------
 
+  /**
+   * 图层显隐：按 mesh 逐个控制。骨骼与皮肤网格同挂在 body 节点下，
+   * 不能整节点隐藏（否则骨骼关掉会连带隐藏皮肤），故一律落到 mesh.visible。
+   * 肌肉为运行时几何，整体切换 muscleRoot。
+   */
   setLayerVisible(group: PartGroup, visible: boolean): void {
-    if (!this.rig || !this.poseMapState) return
-    for (const part of this.rig.parts) {
-      if (part.group !== group) continue
-      const node = this.poseMapState.nodes.get(part.id)
-      if (node) node.visible = visible
+    this.layerVisible[group] = visible
+    this.applyLayerVisibility()
+  }
+
+  /** 图层不透明度：只改该组材质；高亮中的部位保持高亮态 */
+  setLayerOpacity(group: PartGroup, v: number): void {
+    this.layerOpacity[group] = Math.min(Math.max(v, 0), 1)
+    this.applyLayerOpacity(group)
+  }
+
+  /** 建立 mesh → 图层映射（模型与 rig 都就绪后调用一次） */
+  private bindLayers(): void {
+    if (!this.modelRoot) return
+    this.meshGroup.clear()
+    const skinNodes = new Set<string>()
+    for (const a of this.rig?.attachments ?? []) {
+      if (a.group === 'skin') skinNodes.add(a.id)
+    }
+    this.modelRoot.traverse((obj) => {
+      if (!(obj instanceof THREE.Mesh)) return
+      // 向上找最近的皮肤节点；找不到即骨骼网格
+      let cur: THREE.Object3D | null = obj
+      let group: PartGroup = 'skeleton'
+      while (cur) {
+        if (skinNodes.has(cur.name)) {
+          group = 'skin'
+          break
+        }
+        cur = cur.parent
+      }
+      this.meshGroup.set(obj, group)
+      if (group === 'skin') {
+        for (const m of Array.isArray(obj.material) ? obj.material : [obj.material]) {
+          if (!(m instanceof THREE.MeshStandardMaterial)) continue
+          m.color.setHex(SKIN_COLOR)
+          m.roughness = 0.9
+          m.metalness = 0
+          m.side = THREE.DoubleSide
+        }
+      }
+    })
+    this.applyLayerVisibility()
+    this.applyLayerOpacity()
+  }
+
+  private applyLayerVisibility(): void {
+    for (const [mesh, group] of this.meshGroup) mesh.visible = this.layerVisible[group]
+    if (this.muscleRoot) this.muscleRoot.visible = this.layerVisible.muscle
+  }
+
+  private applyLayerOpacity(only?: PartGroup): void {
+    for (const [mesh, group] of this.meshGroup) {
+      if (only && group !== only) continue
+      if (this.partOfMesh(mesh) === this.highlightedPart) continue // 高亮态不动
+      this.applyOpacityToMesh(mesh, this.layerOpacity[group])
+    }
+    if (!only || only === 'muscle') {
+      for (const seg of this.muscleSegments) {
+        this.setMaterialOpacity(seg.material, this.layerOpacity.muscle)
+      }
     }
   }
 
-  setLayerOpacity(group: PartGroup, v: number): void {
-    if (!this.rig) return
-    const opacity = Math.min(Math.max(v, 0), 1)
-    for (const [mesh, mat] of this.meshMaterials) {
-      const part = this.partOfMesh(mesh)
-      if (part === this.highlightedPart) continue // 高亮态不动
-      const groupOf = this.rig.parts.find((p) => p.id === part)?.group
-      if (groupOf !== group) continue
-      mat.opacity = opacity
-      mat.transparent = opacity < 1
-      mat.depthWrite = opacity >= 1
-      mat.needsUpdate = true
+  private applyOpacityToMesh(mesh: THREE.Mesh, opacity: number): void {
+    for (const m of Array.isArray(mesh.material) ? mesh.material : [mesh.material]) {
+      if (m instanceof THREE.MeshStandardMaterial) this.setMaterialOpacity(m, opacity)
+    }
+  }
+
+  private setMaterialOpacity(material: THREE.MeshStandardMaterial, opacity: number): void {
+    material.opacity = opacity
+    material.transparent = opacity < 1
+    material.depthWrite = opacity >= 1
+    material.needsUpdate = true
+  }
+
+  // ---------- 肌肉示意线 ----------
+
+  /** 注入肌肉示意线数据（Viewport 在模型就绪后加载 muscle-meta.json） */
+  setMuscleData(meta: MuscleMeta): void {
+    this.muscleMeta = meta
+    this.rebuildMuscles()
+  }
+
+  /** 当前场景关注的肌肉集合：只为这些执行器生成几何（避免 700 块全量渲染） */
+  setActiveMuscles(names: string[]): void {
+    this.activeMuscleNames = new Set(names)
+    this.rebuildMuscles()
+  }
+
+  /** 肌肉激活度（%MVC，键为执行器名）：只改颜色，不改几何 */
+  setMuscleActivations(values: Record<string, number>): void {
+    for (const [name, v] of Object.entries(values)) this.muscleActivation.set(name, v)
+    this.updateMuscleColors()
+  }
+
+  private updateMuscleColors(): void {
+    for (const seg of this.muscleSegments) {
+      const raw = (this.muscleActivation.get(seg.name) ?? 0) / 100
+      const act = Math.min(Math.max(raw, 0), 1)
+      seg.material.color.copy(MUSCLE_REST).lerp(MUSCLE_ACTIVE, act)
+    }
+  }
+
+  /** 重建肌肉几何：每块肌肉 = 相邻附着点之间的圆柱管段 */
+  private rebuildMuscles(): void {
+    if (this.muscleRoot) {
+      this.scene.remove(this.muscleRoot)
+      for (const seg of this.muscleSegments) seg.material.dispose()
+      this.muscleRoot = null
+    }
+    this.muscleSegments = []
+    if (!this.muscleMeta || !this.modelRoot || !this.poseMapState) return
+
+    const root = new THREE.Group()
+    root.name = 'muscle-layer'
+    for (const name of this.activeMuscleNames) {
+      const def = this.muscleMeta.muscles[name]
+      if (!def || def.points.length < 2) continue
+      const material = new THREE.MeshStandardMaterial({
+        color: MUSCLE_REST.clone(),
+        roughness: 0.55,
+        metalness: 0,
+      })
+      const points = def.points.map((p) => ({
+        node: this.poseMapState?.nodes.get(p.body) ?? null,
+        local: new THREE.Vector3(p.pos[0], p.pos[1], p.pos[2]),
+      }))
+      const meshes: THREE.Mesh[] = []
+      for (let i = 0; i < points.length - 1; i++) {
+        const mesh = new THREE.Mesh(this.segmentGeometry, material)
+        mesh.frustumCulled = false
+        root.add(mesh)
+        meshes.push(mesh)
+      }
+      this.muscleSegments.push({
+        name,
+        material,
+        meshes,
+        points,
+        world: points.map(() => new THREE.Vector3()),
+      })
+    }
+    this.muscleRoot = root
+    this.scene.add(root)
+    this.applyLayerVisibility()
+    this.applyLayerOpacity('muscle')
+    this.updateMuscleColors()
+    this.updateMuscleGeometry()
+  }
+
+  /** 每个姿态帧刷新肌肉管段：把 body 局部坐标转到世界坐标后重定位/拉伸圆柱 */
+  private updateMuscleGeometry(): void {
+    if (!this.modelRoot || this.muscleSegments.length === 0) return
+    // applyPose 刚改过局部变换，matrixWorld 需先刷新才能 localToWorld
+    this.modelRoot.updateMatrixWorld(true)
+    for (const seg of this.muscleSegments) {
+      let valid = true
+      for (let i = 0; i < seg.points.length; i++) {
+        const p = seg.points[i]
+        if (!p.node) {
+          valid = false
+          break
+        }
+        seg.world[i].copy(p.local)
+        p.node.localToWorld(seg.world[i])
+      }
+      for (let i = 0; i < seg.meshes.length; i++) {
+        const mesh = seg.meshes[i]
+        if (!valid) {
+          mesh.visible = false
+          continue
+        }
+        _segA.copy(seg.world[i])
+        _segB.copy(seg.world[i + 1])
+        _segDir.subVectors(_segB, _segA)
+        const len = _segDir.length()
+        if (len < 1e-6) {
+          mesh.visible = false
+          continue
+        }
+        mesh.visible = true
+        mesh.position.addVectors(_segA, _segB).multiplyScalar(0.5)
+        mesh.quaternion.setFromUnitVectors(_cylAxis, _segDir.normalize())
+        mesh.scale.set(MUSCLE_RADIUS, len, MUSCLE_RADIUS)
+      }
     }
   }
 
@@ -517,6 +748,8 @@ export class SceneManager {
         for (const m of Array.isArray(obj.material) ? obj.material : [obj.material]) m.dispose()
       }
     })
+    for (const seg of this.muscleSegments) seg.material.dispose()
+    this.segmentGeometry.dispose()
     this.scene.remove(this.modelRoot ?? new THREE.Object3D())
     this.renderer.dispose()
   }

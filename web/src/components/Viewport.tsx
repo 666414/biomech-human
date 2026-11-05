@@ -15,7 +15,7 @@
  */
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react'
 import { useStore } from '../store'
-import type { JointAngles, PartGroup } from '../types'
+import type { JointAngles, MuscleMeta, PartGroup } from '../types'
 import { checkPoseMap, formatFkResult, loadFkReference } from '../three/fkCheck'
 import { SceneManager, type DebugState, type Quality, type ViewPreset } from '../three/SceneManager'
 
@@ -29,6 +29,7 @@ const DEBUG_INITIAL: DebugState = {
   lastError: null,
   bodyCount: 0,
   renderFrames: 0,
+  layerMeshes: { skeleton: 0, muscle: 0, skin: 0 },
 }
 
 function isFkCheck(): boolean {
@@ -47,6 +48,8 @@ function detectQuality(): Quality {
 /** 父层（布局）通过 ref 调用的视口能力 */
 export interface ViewportHandle {
   setPose: (q: JointAngles) => void
+  /** 当前帧肌肉激活度（%MVC，顺序与 scene.muscles 对齐） */
+  setMuscleAct: (values: number[]) => void
   focusPart: (partId: string) => void
   setView: (view: ViewPreset) => void
   highlight: (partId: string | null) => void
@@ -89,6 +92,8 @@ export default function Viewport({
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState<string | null>(null)
   const [ready, setReady] = useState(false)
+  /** 肌肉示意线数据是否就绪（缺失时肌肉图层无几何，不影响模型可用） */
+  const [muscleReady, setMuscleReady] = useState(false)
   const [fkText, setFkText] = useState<string | null>(null)
   const [reloadNonce, setReloadNonce] = useState(0)
 
@@ -104,6 +109,7 @@ export default function Viewport({
     setProgress(0)
     setError(null)
     setReady(false)
+    setMuscleReady(false)
 
     try {
       sm = new SceneManager(canvas, detectQuality())
@@ -142,6 +148,20 @@ export default function Viewport({
         if (cancelled) return
         setReady(true)
         onReady?.()
+
+        // 肌肉示意线数据（执行器 → 肌腱站点折线）：加载失败仅降级为空图层
+        try {
+          const res = await fetch('/data/models/muscle-meta.json')
+          if (res.ok) {
+            const meta = (await res.json()) as MuscleMeta
+            if (!cancelled) {
+              sm!.setMuscleData(meta)
+              setMuscleReady(true)
+            }
+          }
+        } catch {
+          // 忽略：肌肉图层无几何，骨骼/皮肤不受影响
+        }
 
         if (isFkCheck()) {
           const refJson = await loadFkReference()
@@ -186,6 +206,13 @@ export default function Viewport({
     if (rigMeta) smRef.current?.setRig(rigMeta)
   }, [rigMeta])
 
+  // 场景切换：只为当前场景关注的肌肉生成示意线（其余 700 块不建几何）
+  const scene = useStore((s) => s.scene)
+  useEffect(() => {
+    if (!ready || !muscleReady) return
+    smRef.current?.setActiveMuscles(scene?.muscles ?? [])
+  }, [scene, ready, muscleReady, rigMeta])
+
   // 高亮跟随选中状态
   const selectedPartId = useStore((s) => s.selectedPartId)
   useEffect(() => {
@@ -209,6 +236,15 @@ export default function Viewport({
       setPose: (q) => {
         poseRef.current = q
         smRef.current?.setPose(q)
+      },
+      setMuscleAct: (values) => {
+        const current = useStore.getState().scene
+        if (!current) return
+        const rec: Record<string, number> = {}
+        current.muscles.forEach((name, i) => {
+          rec[name] = values[i] ?? 0
+        })
+        smRef.current?.setMuscleActivations(rec)
       },
       focusPart: (partId) => smRef.current?.focusPart(partId),
       setView: (view) => smRef.current?.setView(view),
