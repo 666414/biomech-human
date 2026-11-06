@@ -182,6 +182,8 @@ export default function Viewport({
             console.log(text)
             setFkText(text)
           }
+          // 对账在树外直接 applyPose/resetPose，绕过 setPose 的姿态缓存，需强制重应用
+          sm.invalidatePose()
         }
       } catch (e) {
         if (!cancelled) {

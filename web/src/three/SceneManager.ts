@@ -145,6 +145,13 @@ export class SceneManager {
   private bodyCount = 0
   /** 渲染循环已执行帧数 */
   private renderFrames = 0
+  /**
+   * 按需渲染脏标记：仅交互/图层/姿态/数据变化时提交 WebGL，空闲帧跳过渲染。
+   * （headless 软光栅下连续 RAF 渲染是主线程长任务主因；真机上同为省电优化）
+   */
+  private needsRender = true
+  /** 上一帧应用的姿态值（相同姿态跳过 applyPose/肌肉重写/渲染） */
+  private lastPose: JointAngles | null = null
 
   /** 渲染循环前回调（Viewport 借此每帧读 store → setPose，保证同帧生效） */
   onFrame: ((sm: SceneManager) => void) | null = null
@@ -180,6 +187,10 @@ export class SceneManager {
     this.controls.enableDamping = true
     this.controls.dampingFactor = 0.08
     this.controls.target.set(0, 0, 0.95)
+    // 按需渲染：轨道交互（含阻尼惯性期间）每次相机变化都标脏
+    this.controls.addEventListener('change', () => {
+      this.needsRender = true
+    })
 
     // 灯光：环境 + 主方向光（Z-up 世界，光从头顶偏前上方来）
     const ambient = new THREE.AmbientLight(0xffffff, 0.55)
@@ -269,6 +280,7 @@ export class SceneManager {
             this.deshareMaterials(gltf.scene)
             this.bodyCount = this.countBodyNodes(gltf.scene)
             this.modelLoaded = true
+            this.needsRender = true // 异步加载完成后必须补一帧
             this.tryBuildPoseMap()
             resolve()
           } catch (e) {
@@ -398,10 +410,31 @@ export class SceneManager {
 
   // ---------- 姿态 ----------
 
-  /** 每帧驱动：applyPose 直接改局部变换，无对象分配；随后刷新肌肉管段 */
+  /** 每帧驱动：姿态与上一帧相同则整帧跳过（applyPose/肌肉重写/渲染全省） */
   setPose(q: JointAngles): void {
+    if (this.poseUnchanged(q)) return
     if (this.poseMapState) applyPose(this.poseMapState, q)
     this.updateMuscleGeometry()
+    this.lastPose = { ...q }
+    this.needsRender = true
+  }
+
+  /** 姿态值比较：键集与数值全同视为未变化（键集恒为 rig joints） */
+  private poseUnchanged(q: JointAngles): boolean {
+    const last = this.lastPose
+    if (!last) return false
+    let n = 0
+    for (const k in q) {
+      n += 1
+      if (last[k] !== q[k]) return false
+    }
+    return n === Object.keys(last).length
+  }
+
+  /** 外部绕过 setPose 直接改姿态树（FK 对账）后调用：强制下一帧重新应用姿态 */
+  invalidatePose(): void {
+    this.lastPose = null
+    this.needsRender = true
   }
 
   // ---------- 拾取与高亮 ----------
@@ -447,6 +480,7 @@ export class SceneManager {
     }
     this.snapshots = []
     this.highlightedPart = partId
+    this.needsRender = true
     if (!partId || !this.poseMapState?.nodes.has(partId)) return
 
     for (const [mesh, mat] of this.meshMaterials) {
@@ -492,12 +526,14 @@ export class SceneManager {
   setLayerVisible(group: PartGroup, visible: boolean): void {
     this.layerVisible[group] = visible
     this.applyLayerVisibility()
+    this.needsRender = true
   }
 
   /** 图层不透明度：只改该组材质；高亮中的部位保持高亮态 */
   setLayerOpacity(group: PartGroup, v: number): void {
     this.layerOpacity[group] = Math.min(Math.max(v, 0), 1)
     this.applyLayerOpacity(group)
+    this.needsRender = true
   }
 
   /** 建立 mesh → 图层映射（模型与 rig 都就绪后调用一次） */
@@ -583,10 +619,18 @@ export class SceneManager {
     this.rebuildMuscles()
   }
 
-  /** 肌肉激活度（%MVC，键为执行器名）：只改颜色，不改几何 */
+  /** 肌肉激活度（%MVC，键为执行器名）：只改颜色，不改几何；值未变则整帧跳过 */
   setMuscleActivations(values: Record<string, number>): void {
-    for (const [name, v] of Object.entries(values)) this.muscleActivation.set(name, v)
+    let changed = false
+    for (const [name, v] of Object.entries(values)) {
+      if (this.muscleActivation.get(name) !== v) {
+        this.muscleActivation.set(name, v)
+        changed = true
+      }
+    }
+    if (!changed) return
     this.updateMuscleColors()
+    this.needsRender = true
   }
 
   private updateMuscleColors(): void {
@@ -644,6 +688,7 @@ export class SceneManager {
     this.applyLayerOpacity('muscle')
     this.updateMuscleColors()
     this.updateMuscleGeometry()
+    this.needsRender = true
   }
 
   /** 每个姿态帧刷新肌肉：把 body 局部坐标转到世界坐标后重写整根管的顶点 */
@@ -687,6 +732,7 @@ export class SceneManager {
     }
     this.controls.target.set(0, 0, 0.95)
     this.controls.update()
+    this.needsRender = true
   }
 
   /** 相机聚焦部位：target 移到该部位世界坐标，相机拉近 */
@@ -701,6 +747,7 @@ export class SceneManager {
     this.controls.target.copy(wp)
     this.camera.position.copy(wp).add(offset)
     this.controls.update()
+    this.needsRender = true
   }
 
   // ---------- 循环与生命周期 ----------
@@ -709,10 +756,14 @@ export class SceneManager {
     const tick = () => {
       if (this.disposed) return
       this.rafId = requestAnimationFrame(tick)
-      this.onFrame?.(this)
-      this.controls.update()
-      this.renderer.render(this.scene, this.camera)
-      this.renderFrames += 1 // 调试探针：RAF 帧计数
+      this.onFrame?.(this) // Viewport 同步 store 姿态；姿态未变时 setPose 内部跳过
+      this.controls.update() // 阻尼：活动期持续派发 change → 标脏
+      // 按需渲染：无变化的空闲帧不提交 WebGL
+      if (this.needsRender) {
+        this.renderer.render(this.scene, this.camera)
+        this.needsRender = false
+      }
+      this.renderFrames += 1 // 调试探针：RAF 帧计数（含空转帧，反映循环存活）
     }
     this.rafId = requestAnimationFrame(tick)
   }
@@ -723,6 +774,7 @@ export class SceneManager {
     this.renderer.setSize(w, h, false)
     this.camera.aspect = w / h
     this.camera.updateProjectionMatrix()
+    this.needsRender = true
   }
 
   dispose(): void {
