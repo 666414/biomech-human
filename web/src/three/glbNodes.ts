@@ -24,6 +24,7 @@ interface GlbNodeDef {
   matrix?: number[]
   children?: number[]
   mesh?: number
+  skin?: number
 }
 
 /** 单个具名节点的局部变换（three 语义：Quaternion 为 x,y,z,w） */
@@ -33,6 +34,10 @@ export interface GlbNodeLocal {
   quat: Quaternion
   /** 具名子节点名（含 mesh 子节点，供契约校验过滤） */
   children: string[]
+  /** 该节点引用的 mesh 索引（无网格时不填） */
+  mesh?: number
+  /** 该节点引用的 skin 索引（蒙皮网格才有，供图层契约校验） */
+  skin?: number
 }
 
 export interface GlbNodes {
@@ -72,6 +77,8 @@ export function parseGlbNodes(data: ArrayBuffer | Uint8Array): GlbNodes {
   for (const def of defs) {
     if (def.name === undefined) continue
     const local = decompose(def)
+    if (def.mesh !== undefined) local.mesh = def.mesh
+    if (def.skin !== undefined) local.skin = def.skin
     byName.set(local.name, local)
     locals.push(local)
     def.children?.forEach((childIdx) => {

@@ -13,3 +13,7 @@ web/public/draco/
 !web/public/data/fk-reference.json
 *.local
 .screenshots/
+# 体表资产源文件（NIH 3D Human Atlas，150MB+，按 05 文档「完整体表」小节重新下载）
+VH_M_Skin.glb
+pipeline/skin_full_male.glb
+pipeline/skin_raw.glb

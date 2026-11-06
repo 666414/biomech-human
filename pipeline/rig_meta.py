@@ -1,8 +1,9 @@
 """生成 rig-meta.json：部位名表（中英）+ 分组 + 关节元数据 + 非骨骼图层节点。
 
 - parts：MuJoCo body 层级（骨骼），节点名 = body id，带关节定义；
-- attachments：挂在 body 下的非骨骼可视节点（皮肤胶囊），节点名 = glb 节点名，
-  分组为 skin/muscle，前端分层控件据此定位节点与材质。
+- attachments：挂在 body 下的非骨骼可视节点（皮肤网格），节点名 = glb 节点名，
+  分组为 skin/muscle，前端分层控件据此定位节点与材质；骨骼侧不产出附件，
+  故由生成皮肤网格的环节（assemble_skin.js）写入。
 """
 from dataclasses import asdict
 

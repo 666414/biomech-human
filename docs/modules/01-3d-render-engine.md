@@ -75,18 +75,25 @@
 
 ### 分层显示落地细节（P5 修复）
 
-- **按 mesh 而非按节点控制**：皮肤节点（`<body>__<geom>`，见 05 文档）与骨骼网格同挂在
-  body 节点下，若按 body 节点隐藏「骨骼」会连带隐藏皮肤。故 `meshGroup: Map<Mesh, PartGroup>`
+- **按 mesh 而非按节点控制**：皮肤网格（`skin_mesh` SkinnedMesh，见 05 文档）与骨骼网格
+  同挂在 body 节点下，若按 body 节点隐藏「骨骼」会连带隐藏皮肤。故 `meshGroup: Map<Mesh, PartGroup>`
   在加载后建立（向上查最近的 `rig-meta.attachments` 节点 → skin，否则 skeleton），
   `setLayerVisible` 一律落到 `mesh.visible`；肌肉为运行时几何，切换 `muscleRoot.visible`。
-- **皮肤**：材质在绑定时统一为肤色 + `roughness 0.9` + 双面；默认不透明度 **0.25**
-  （全不透明会完全遮住骨骼），滑杆 0→1 可连续调节。
+- **皮肤**：单个蒙皮网格（92,659 顶点），绑定 80 个 body joint，随 FK 姿态自动变形——
+  `SceneManager` 无需额外处理，正常 `applyPose` 改骨骼局部变换即可。材质在绑定时统一为
+  肤色 + `roughness 0.9` + 双面；默认不透明度 **0.25**（全不透明会完全遮住骨骼），
+  滑杆 0→1 可连续调节。
 - **肌肉**：`muscle-meta.json` 提供执行器 → 肌腱站点折线，只为当前场景的 6–8 块肌肉建几何；
-  每块肌肉按相邻附着点生成圆柱管段（半径 9mm），每帧把 body 局部坐标经 `localToWorld`
-  转世界坐标后重定位/拉伸（`setPose` 内先 `updateMatrixWorld`）。
+  每块肌肉**一整根管**（`three/muscleTube.ts`）：折线按均匀弧长重采样后加纺锤形半径剖面
+  （中段肌腹 14mm、两端肌腱 0.3 倍），逐帧把 body 局部坐标经 `localToWorld` 转世界坐标后
+  重写管体顶点（`setPose` 内先 `updateMatrixWorld`）。顶点色沿长度在肌腱米白 `#ece2cd` →
+  肌腹砖红 `#bb5540` 间过渡；材质（`three/muscleMaterial.ts`）为 `MeshPhysicalMaterial`
+  + 程序化纤维 bump 贴图 + 清漆/绒面 + 材质内 Fresnel 边缘光（不新增场景灯光，骨骼/皮肤观感不变）。
 - **激活着色**：`App` 每帧把 `frame.muscleAct` 经 `ViewportHandle.setMuscleAct` 下发，
-  `SceneManager.setMuscleActivations` 按 %MVC 在静息暗红 `#6b2c2c` → 激活亮红 `#ff4a30` 插值。
-- `debugState().layerMeshes` 暴露各图层对象数（实测 skeleton 132 / skin 14 / muscle 13 段），
+  `SceneManager.setMuscleActivations` 按 %MVC 在材质 `color` 上做乘法染色
+  （静息中性白 → 激活暖红 `rgb(1.5, 0.78, 0.66)`），解剖配色由顶点色承担。
+- `debugState().layerMeshes` 暴露各图层对象数（实测 skeleton 132 / skin 1 / muscle 8 根），
   `?fkcheck=1` 浮层旁的 `data-debug` 可直接读取，用于自动化验收。
 - 回归守卫：`web/src/tests/modelLayers.test.ts` 校验 rig-meta 附件节点存在于 glb、
-  皮肤节点数一致、每场景每块肌肉均有 ≥2 个有效附着点。
+  glb 中所有带 `skin` 索引的节点都已被声明为皮肤图层、每场景每块肌肉均有 ≥2 个有效附着点；
+  `web/src/tests/muscleTube.test.ts` 校验纺锤形剖面与肌腱/肌腹配色。

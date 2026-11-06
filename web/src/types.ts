@@ -36,9 +36,9 @@ export interface RigPart {
   joints: RigJoint[]
 }
 
-/** 非骨骼图层的可视节点（挂在 body 下的皮肤胶囊等） */
+/** 非骨骼图层的可视节点（挂在 body 下的皮肤网格等） */
 export interface RigAttachment {
-  /** glb 节点名（如 femur_r__femur_skin_r） */
+  /** glb 节点名（如 skin_mesh） */
   id: string
   /** 所属 body 节点 id */
   parent: string

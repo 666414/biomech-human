@@ -1,11 +1,10 @@
 """把 body 树装配进 trimesh 场景图：节点=body（保层级与局部 TRS）。
 
-几何有两类：
-- 骨骼：XML 的 type="mesh" 网格（节点名 `<body>__<mesh>`）；
-- 皮肤：XML 的 class="skin" 胶囊（节点名 `<body>__<geom>`，由 trimesh 生成）。
+几何：XML 的 type="mesh" 网格（节点名 `<body>__<mesh>`）。
 
-皮肤节点是 body 的子节点，随骨骼运动；分层显示按节点名区分分组，
-因此不会与骨骼网格混在一起。
+皮肤不在本模块生成：早期用 `class="skin"` 胶囊拼出的下肢占位几何已被完整体表
+（NIH 3D Human Atlas `VH_M_skin`）取代，由 `skin_bind.py` + `assemble_skin.js`
+生成带蒙皮的 `skin_mesh` 节点挂到 pelvis 下。
 """
 import os
 
@@ -19,21 +18,13 @@ def mu_to_matrix(pos, quat):
     return T
 
 
-def _capsule_mesh(size):
-    """MuJoCo capsule size=[radius, half_length] → trimesh 胶囊（轴沿 +Z，与 MuJoCo 一致）。"""
-    radius, half_length = float(size[0]), float(size[1])
-    return trimesh.creation.capsule(height=2 * half_length, radius=radius, count=[16, 16])
-
-
 def assemble(tree, repo_root, exclude_prefixes=()):
-    """返回 (trimesh.Scene, node_bodies, skin_attachments)。
+    """返回 (trimesh.Scene, node_bodies)。
 
-    skin_attachments: [{id, parent, group:'skin', names:{en, zh}}]，
-    供 rig-meta 记录「非骨骼图层」的节点归属。
+    节点归属（骨骼/皮肤/肌肉）由各产物自行声明，本模块只产出骨骼网格。
     """
     scene = trimesh.Scene()
     node_bodies = []
-    skin_attachments = []
     mesh_cache = {}
 
     def load_mesh(fname):
@@ -53,22 +44,10 @@ def assemble(tree, repo_root, exclude_prefixes=()):
         for g in body.geoms:
             if excluded:
                 continue
-            if g["file"]:
-                geom = load_mesh(g["file"])
-                key = f"{body.name}__{g['mesh']}"
-            elif g["class"] == "skin" and g["type"] == "capsule" and g["size"]:
-                geom = _capsule_mesh(g["size"])
-                key = f"{body.name}__{g['name']}"
-                skin_attachments.append(
-                    {
-                        "id": key,
-                        "parent": body.name,
-                        "group": "skin",
-                        "names": {"en": g["name"], "zh": g["name"]},
-                    }
-                )
-            else:
+            if not g["file"]:
                 continue
+            geom = load_mesh(g["file"])
+            key = f"{body.name}__{g['mesh']}"
             if key in scene.geometry:
                 continue
             scene.add_geometry(
@@ -81,4 +60,4 @@ def assemble(tree, repo_root, exclude_prefixes=()):
 
     for root_body in tree["bodies"]:
         walk(root_body, "world")
-    return scene, node_bodies, skin_attachments
+    return scene, node_bodies

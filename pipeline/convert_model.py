@@ -21,12 +21,10 @@ def main():
 
     os.makedirs(args.out, exist_ok=True)
     tree = parse_mjcf(args.xml)
-    scene, node_bodies, skin_attachments = assemble(
-        tree, args.root, exclude_prefixes=args.exclude_prefix
-    )
+    scene, node_bodies = assemble(tree, args.root, exclude_prefixes=args.exclude_prefix)
     with open(os.path.join(os.path.dirname(__file__), "part_name_zh.json"), encoding="utf-8") as f:
         zh_map = json.load(f)
-    meta = build_rig_meta(tree, zh_map, skin_attachments)
+    meta = build_rig_meta(tree, zh_map)
     muscle_meta = build_muscle_meta(tree)
 
     glb_path = os.path.join(args.out, "human.glb")
@@ -42,8 +40,7 @@ def main():
     size_mb = os.path.getsize(glb_path) / 1024 / 1024
     print(
         f"bodies={len(node_bodies)} geoms={len(scene.geometry)} "
-        f"skin_nodes={len(skin_attachments)} muscles={len(muscle_meta['muscles'])} "
-        f"glb={size_mb:.1f}MB"
+        f"muscles={len(muscle_meta['muscles'])} glb={size_mb:.1f}MB"
     )
     if issues:
         print("校验失败:")

@@ -98,11 +98,10 @@ MS-Human-700.xml + STL
 - `mjcf_parser.py`：新增 `<default class="x">` 展开（全局默认 → 类默认 → 元素属性），
   解析 geom 的 `type/size/group/class`；额外产出 `sites`（site 名 → body + 局部坐标）、
   `tendons`（spatial 肌腱名 → site 引用顺序）、`actuators`（执行器名 → 肌腱名）。
-- `mesh_assembler.py`：皮肤胶囊（`class="skin"` + `type="capsule"` + `size=[r, half_len]`）
-  用 `trimesh.creation.capsule(height=2*half_len)` 生成节点 `<body>__<geom>`（如
-  `femur_r__femur_skin_r`），挂在对应 body 下并随骨骼运动。
+- `mesh_assembler.py`：只导出骨骼网格（`type="mesh"`）。早期用 `class="skin"` 胶囊
+  拼出的 14 个下肢/足部节点已废弃——体表外观改由完整体表蒙皮网格提供（见下节）。
 - `rig_meta.py`：`parts` 仍为 80 个 body（骨骼，保持 `parts.length === 80` 的既有契约），
-  新增顶层 `attachments: [{id, parent, group:'skin', names:{en, zh}}]`（14 条，zh 由父部位名派生）。
+  `attachments` 由产出皮肤网格的环节写入（当前仅 1 条 `skin_mesh`）。
 - `muscle_meta.py`（新）：执行器 → 肌腱 → 站点折线，输出
   `muscle-meta.json`：`{"muscles": {"<执行器名>": {"tendon", "points":[{"body","pos"}]}}}`，
   覆盖 700 个执行器；前端只渲染当前场景 `muscles` 名单（6–8 块）。
@@ -115,10 +114,51 @@ python -m pipeline.convert_model --xml assets/MS-Human-700/MS-Human-700.xml \
   --root assets/MS-Human-700 --out pipeline/out/fullbody
 ```
 
-`bodies=80 geoms=146 skin_nodes=14 muscles=700`，human.glb 10,085,300 B →
-Draco 后 **671,448 B**；glb 节点数 226（212 骨骼 + 14 皮肤），`rig-meta.json` 64KB、
+`bodies=80 geoms=132 muscles=700`，human.glb 9.6MB（仅骨骼）；`rig-meta.json` 33KB、
 `muscle-meta.json` 178KB（gzip 后约 25KB）。
 
-**已知边界**：Primary 模型只有下肢/足部皮肤几何（`Body_Primary/Body_Leg_Foot_{r,l}.xml`
-各 7 个胶囊），躯干与上肢在源模型中不含皮肤；肌肉为肌腱站点折线示意管（非解剖肌肉网格），
-且只取 `<site>` 参考点、跳过 `<geom>` 包裹点。
+## 完整体表（蒙皮网格）
+
+**资产来源**：NIH 3D Human Atlas 男性体表 `VH_M_skin`（92,659 顶点 / 185,314 面，
+CC BY 4.0，Y-up 米制）。
+
+**三步产出**（顺序固定，后一步依赖前一步的 `human.glb` 节点索引）：
+
+1. `convert_model.py` → 只含骨骼网格的 `human.glb`（80 body / 132 mesh）
+2. `skin_bind.py` → 权重与逆绑定矩阵：
+   - **朝向**：源体表是 Y-up、**面朝 +z**、左右轴 +x（鼻尖/脚尖实测都在 +z 侧）；
+     骨骼（pelvis 局部系）**面朝 +x**、左右轴 +y。`Rx(+90°)` 只负责把 Y-up 立成 Z-up
+     （源 +z → 世界 -y），**再绕 z 转 +90°** 才能让源 +z → +x（面朝前）、源 +x → +y
+     （左右手不互换）。这一步的符号写反会让皮肤整体转 180°：后脑对上颅骨、脚跟对脚尖、
+     左右手互换——即"皮肤与骨骼方向相反"的故障形态。
+   - 再按 `1.75 / 身高` 缩放、足底落到 `z=0.013`，乘 `inv(M_pelvis)`
+     （`M_pelvis = T(0,0,0.95) @ Rx(90°)`）落到 pelvis 局部系；
+   - 权重：顶点到 **80 条骨骼线段**的距离 → `(1/(d+0.04))³` → top-4 归一化
+     （实测 top-1 平均 0.373）；线段按"近端 body"归属，避免弯肘带走整条上臂；
+   - 手臂门控：网格表面多源测地距离比较"离手臂近还是离躯干近"，边界落在腋窝；
+   - A-pose 归位：源体表手臂外展 ~29°、站距 ±0.21，按"皮肤肢体轴与骨骼轴在 y-z 平面的
+     交点"为枢轴整体旋转到骨骼静止位（手 −22.9°/+23.2°、腿 ∓1.7°）；
+   - 输出 `skin_{vertices,faces,joints,weights,ibm}.bin` + `skin_bind_meta.json`
+     （IBM 按 glTF 列主序存 `inv(W_rest)`）
+3. `assemble_skin.js` → 用 Node Buffer 直接改写 GLB（追加 bufferView/accessor/
+   skin/mesh/node），把 `skin_mesh` 挂到 pelvis 下，并写入 `rig-meta.attachments`
+
+**为什么不走 pygltflib**：trimesh 写出的 glb 该库读不进来；手动拼 GLB 头 + JSON/BIN
+chunk 反而稳定，且避免整条依赖。
+
+**体积**：组装后 15.61MB → Draco（`KHR_draco_mesh_compression`，只压几何属性，
+蒙皮结构无损）后 **1.01MB**（-93.5%）。
+
+**运行时绑定**：`assemble_skin.js` 写的是单位阵绑定；`SceneManager.loadGltfOnce` 在
+`gltf.scene.updateMatrixWorld(true)` 之后调用 `rebindSkinnedMeshes()`，把每个 SkinnedMesh
+的 `bindMatrix / bindMatrixInverse` 改成当前 `matrixWorld / inv(matrixWorld)`，
+`bindMode = AttachedBindMode`。否则 three 会用单位阵绑定，模型整体偏移。
+（顶点本身已换算到 pelvis 局部系，所以绑定矩阵必须是 `M_pelvis`。）
+
+**已知边界**：体表是单一闭合网格，手部/手指按最近骨骼吸附，指间可能穿插；
+权重仍是"到骨段的欧氏距离"启发式，腹股沟/腋窝这类左右或前后骨段等距的区域会出现
+权重均分（实测四骨各 0.25），深度 squat 类帧（`drop_landing` t=70%：髋 80°/膝 85°）
+少数边被拉到 10~16 倍（3,091 / 277,971 条边长 >5mm 的边超过 1.5×）。
+要根治需改成测地权重（体表上按表面距离而不是空间距离分配），属独立的绑定质量议题。
+肌肉仍为肌腱站点折线示意管（非解剖肌肉网格），且只取 `<site>` 参考点、
+跳过 `<geom>` 包裹点。

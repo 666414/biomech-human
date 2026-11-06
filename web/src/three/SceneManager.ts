@@ -10,28 +10,34 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { JointAngles, MuscleMeta, PartGroup, RigMeta } from '../types'
+import { createMuscleMaterial } from './muscleMaterial'
+import { MuscleTube } from './muscleTube'
 import { applyPose, buildPoseMap, type PoseMap } from './poseMap'
+import { rebindSkinnedMeshes } from './skinBind'
 
 const HIGHLIGHT_COLOR = 0x33ddff
 const GHOST_OPACITY = 0.15
 
-/** 皮肤胶囊基色（源模型 class="skin" 的 rgba 0.8 0.7 0.5，收敛为类肤色） */
+/** 体表基色（源模型 class="skin" 的 rgba 0.8 0.7 0.5，收敛为类肤色） */
 const SKIN_COLOR = 0xd9b38c
-/** 肌肉示意管：静息暗红 → 激活亮红（按 %MVC 线性插值） */
-const MUSCLE_REST_COLOR = 0x6b2c2c
-const MUSCLE_ACTIVE_COLOR = 0xff4a30
-/** 肌肉管半径（m） */
-const MUSCLE_RADIUS = 0.009
-/** 激活度配色的端点色（按 %MVC 在两者间插值） */
-const MUSCLE_REST = new THREE.Color(MUSCLE_REST_COLOR)
-const MUSCLE_ACTIVE = new THREE.Color(MUSCLE_ACTIVE_COLOR)
+/**
+ * 激活度染色（%MVC）：肌腹/肌腱的解剖配色写在顶点色里（见 muscleTube.ts），
+ * 材质 color 只做「静息中性白 → 激活暖红提亮」的乘法，保留原静息暗红→激活亮红的语义。
+ */
+const MUSCLE_TINT_REST = new THREE.Color(0xffffff)
+const MUSCLE_TINT_ACTIVE = new THREE.Color().setRGB(1.5, 0.78, 0.66)
+/** 肌肉管周向分段数（管越粗、条纹越细密） */
+const MUSCLE_RADIAL_SEGMENTS = 10
+/** 每块肌肉的环数：按折线点数加密，二点肌肉也能显出纺锤形肌腹 */
+const MUSCLE_RING_MIN = 8
+const MUSCLE_RING_MAX = 17
 
 /** 模型加载失败自动重试（下载/解析失败任意原因，含网络偶发 ERR_ABORTED）：上限次数与延迟 */
 const MODEL_LOAD_MAX_RETRIES = 1
 const MODEL_LOAD_RETRY_DELAY_MS = 1500
 
 /** human.glb 已知总大小（字节，Draco 压缩后实测）：响应缺 content-length 时进度兜底 */
-const MODEL_KNOWN_BYTES = 646860
+const MODEL_KNOWN_BYTES = 1014040
 
 /**
  * Draco 解码器（模块级单例）：wasm 解码器只实例化一次，跨 SceneManager 实例
@@ -59,7 +65,7 @@ export interface DebugState {
   bodyCount: number
   /** 渲染循环已执行帧数（RAF 计数） */
   renderFrames: number
-  /** 各图层可绘制对象数（骨骼/皮肤=网格数，肌肉=管段数） */
+  /** 各图层可绘制对象数（骨骼/皮肤=网格数，肌肉=整根管数） */
   layerMeshes: Record<PartGroup, number>
 }
 
@@ -79,22 +85,17 @@ export type ViewPreset = 'front' | 'side' | 'reset'
 /** 画质档位（01 文档降质预设）：low 关抗锯齿 + 像素比上限 1 */
 export type Quality = 'low' | 'high'
 
-/** 单块肌肉的运行时几何：折线点绑定到 body 节点，每帧按世界坐标更新管段 */
+/** 单块肌肉的运行时几何：折线点绑定到 body 节点，每帧按世界坐标重写整根管 */
 interface MuscleSegment {
   name: string
   material: THREE.MeshStandardMaterial
-  /** 相邻折线点之间的管段（长度 = points.length - 1） */
-  meshes: THREE.Mesh[]
+  /** 整条肌肉一根管（纺锤剖面 + 沿长度肌腱/肌腹配色） */
+  tube: MuscleTube
+  mesh: THREE.Mesh
   points: Array<{ node: THREE.Object3D | null; local: THREE.Vector3 }>
   /** 每帧复用的世界坐标缓冲 */
   world: THREE.Vector3[]
 }
-
-// 肌肉管段更新的模块级暂存（避免每帧分配）
-const _segA = new THREE.Vector3()
-const _segB = new THREE.Vector3()
-const _segDir = new THREE.Vector3()
-const _cylAxis = new THREE.Vector3(0, 1, 0) // CylinderGeometry 轴向 +Y
 
 export class SceneManager {
   readonly scene: THREE.Scene
@@ -126,8 +127,6 @@ export class SceneManager {
   private muscleSegments: MuscleSegment[] = []
   private activeMuscleNames = new Set<string>()
   private muscleActivation = new Map<string, number>()
-  /** 肌肉管段共享几何（单位圆柱，运行时用 scale 拉长/变粗） */
-  private segmentGeometry = new THREE.CylinderGeometry(1, 1, 1, 8, 1)
 
   private raycaster = new THREE.Raycaster()
   private rafId = 0
@@ -264,6 +263,9 @@ export class SceneManager {
             if (this.disposed) return resolve()
             this.modelRoot = gltf.scene
             this.scene.add(gltf.scene)
+            // 蒙皮网格重绑：GLTFLoader 以单位阵绑定 + attached 模式抵消网格世界变换，
+            // skin_mesh 挂在 pelvis（非单位变换）下会导致皮肤留在局部空间（躺卧错位）
+            rebindSkinnedMeshes(gltf.scene)
             this.deshareMaterials(gltf.scene)
             this.bodyCount = this.countBodyNodes(gltf.scene)
             this.modelLoaded = true
@@ -341,11 +343,11 @@ export class SceneManager {
     }
   }
 
-  /** 各图层可绘制对象数（骨骼/皮肤按网格计，肌肉按管段计） */
+  /** 各图层可绘制对象数（骨骼/皮肤按网格计，肌肉按整根管计） */
   private countLayerMeshes(): Record<PartGroup, number> {
     const counts: Record<PartGroup, number> = { skeleton: 0, muscle: 0, skin: 0 }
     for (const group of this.meshGroup.values()) counts[group] += 1
-    for (const seg of this.muscleSegments) counts.muscle += seg.meshes.length
+    counts.muscle += this.muscleSegments.length
     return counts
   }
 
@@ -520,6 +522,9 @@ export class SceneManager {
       }
       this.meshGroup.set(obj, group)
       if (group === 'skin') {
+        // 完整体表 glb 不带 NORMAL：three 对缺失法线用常量 (0,0,0)，光照会全黑。
+        // 蒙皮网格按绑定姿态补算一次即可，蒙皮着色器会自动对法线施加蒙皮矩阵。
+        if (!obj.geometry.getAttribute('normal')) obj.geometry.computeVertexNormals()
         for (const m of Array.isArray(obj.material) ? obj.material : [obj.material]) {
           if (!(m instanceof THREE.MeshStandardMaterial)) continue
           m.color.setHex(SKIN_COLOR)
@@ -588,15 +593,18 @@ export class SceneManager {
     for (const seg of this.muscleSegments) {
       const raw = (this.muscleActivation.get(seg.name) ?? 0) / 100
       const act = Math.min(Math.max(raw, 0), 1)
-      seg.material.color.copy(MUSCLE_REST).lerp(MUSCLE_ACTIVE, act)
+      seg.material.color.copy(MUSCLE_TINT_REST).lerp(MUSCLE_TINT_ACTIVE, act)
     }
   }
 
-  /** 重建肌肉几何：每块肌肉 = 相邻附着点之间的圆柱管段 */
+  /** 重建肌肉几何：每块肌肉 = 一根沿折线的纺锤形管（世界坐标，逐帧重写） */
   private rebuildMuscles(): void {
     if (this.muscleRoot) {
       this.scene.remove(this.muscleRoot)
-      for (const seg of this.muscleSegments) seg.material.dispose()
+      for (const seg of this.muscleSegments) {
+        seg.material.dispose()
+        seg.tube.dispose()
+      }
       this.muscleRoot = null
     }
     this.muscleSegments = []
@@ -607,26 +615,25 @@ export class SceneManager {
     for (const name of this.activeMuscleNames) {
       const def = this.muscleMeta.muscles[name]
       if (!def || def.points.length < 2) continue
-      const material = new THREE.MeshStandardMaterial({
-        color: MUSCLE_REST.clone(),
-        roughness: 0.55,
-        metalness: 0,
-      })
+      const ringCount = Math.min(
+        MUSCLE_RING_MAX,
+        Math.max(MUSCLE_RING_MIN, (def.points.length - 1) * 4 + 1),
+      )
+      const tube = new MuscleTube(ringCount, MUSCLE_RADIAL_SEGMENTS, def.points.length)
+      const material = createMuscleMaterial()
+      const mesh = new THREE.Mesh(tube.geometry, material)
+      mesh.name = `muscle:${name}`
+      mesh.frustumCulled = false
+      root.add(mesh)
       const points = def.points.map((p) => ({
         node: this.poseMapState?.nodes.get(p.body) ?? null,
         local: new THREE.Vector3(p.pos[0], p.pos[1], p.pos[2]),
       }))
-      const meshes: THREE.Mesh[] = []
-      for (let i = 0; i < points.length - 1; i++) {
-        const mesh = new THREE.Mesh(this.segmentGeometry, material)
-        mesh.frustumCulled = false
-        root.add(mesh)
-        meshes.push(mesh)
-      }
       this.muscleSegments.push({
         name,
         material,
-        meshes,
+        tube,
+        mesh,
         points,
         world: points.map(() => new THREE.Vector3()),
       })
@@ -639,7 +646,7 @@ export class SceneManager {
     this.updateMuscleGeometry()
   }
 
-  /** 每个姿态帧刷新肌肉管段：把 body 局部坐标转到世界坐标后重定位/拉伸圆柱 */
+  /** 每个姿态帧刷新肌肉：把 body 局部坐标转到世界坐标后重写整根管的顶点 */
   private updateMuscleGeometry(): void {
     if (!this.modelRoot || this.muscleSegments.length === 0) return
     // applyPose 刚改过局部变换，matrixWorld 需先刷新才能 localToWorld
@@ -655,25 +662,7 @@ export class SceneManager {
         seg.world[i].copy(p.local)
         p.node.localToWorld(seg.world[i])
       }
-      for (let i = 0; i < seg.meshes.length; i++) {
-        const mesh = seg.meshes[i]
-        if (!valid) {
-          mesh.visible = false
-          continue
-        }
-        _segA.copy(seg.world[i])
-        _segB.copy(seg.world[i + 1])
-        _segDir.subVectors(_segB, _segA)
-        const len = _segDir.length()
-        if (len < 1e-6) {
-          mesh.visible = false
-          continue
-        }
-        mesh.visible = true
-        mesh.position.addVectors(_segA, _segB).multiplyScalar(0.5)
-        mesh.quaternion.setFromUnitVectors(_cylAxis, _segDir.normalize())
-        mesh.scale.set(MUSCLE_RADIUS, len, MUSCLE_RADIUS)
-      }
+      seg.mesh.visible = valid && seg.tube.update(seg.world)
     }
   }
 
@@ -748,8 +737,10 @@ export class SceneManager {
         for (const m of Array.isArray(obj.material) ? obj.material : [obj.material]) m.dispose()
       }
     })
-    for (const seg of this.muscleSegments) seg.material.dispose()
-    this.segmentGeometry.dispose()
+    for (const seg of this.muscleSegments) {
+      seg.material.dispose()
+      seg.tube.dispose()
+    }
     this.scene.remove(this.modelRoot ?? new THREE.Object3D())
     this.renderer.dispose()
   }

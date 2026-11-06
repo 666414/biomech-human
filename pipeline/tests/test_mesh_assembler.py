@@ -23,8 +23,8 @@ def test_assemble_preserves_hierarchy_and_meshes():
     # 80 个 body 节点全部进入场景图
     assert len(node_bodies) == 80
     assert "pelvis" in scene.graph.nodes
-    # 网格几何体数量 = 所有 type=mesh 的 geom 数
-    total = sum(len(b.geoms) for b in node_bodies)
+    # 网格几何体数量 = 带 file 的 geom 数（class="skin" 的胶囊不再导出）
+    total = sum(1 for b in node_bodies for g in b.geoms if g["file"])
     assert len(scene.geometry) == total
     # 变换值校验：graph.get 返回相对 world 的累计变换。
     # pelvis 为根 body，累计 == 局部；node_bodies[1] 是 pelvis 的第一个子节点，
@@ -45,7 +45,11 @@ def test_exclude_prefixes_skip_geoms_but_keep_nodes():
     # 但其几何被剔除
     assert not any(k.startswith("pelvis__") for k in scene.geometry)
     assert len(scene.geometry) == sum(
-        len(b.geoms) for b in node_bodies if not b.name.startswith("pelvis")
+        1
+        for b in node_bodies
+        if not b.name.startswith("pelvis")
+        for g in b.geoms
+        if g["file"]
     )
 
 

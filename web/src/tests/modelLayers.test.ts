@@ -1,3 +1,4 @@
+// @vitest-environment node
 /**
  * 模型图层契约回归（肌肉/皮肤滑杆必须有可作用对象）。
  *
@@ -30,9 +31,16 @@ describe('模型图层契约（滑杆可作用）', () => {
     }
   })
 
-  it('glb 里的皮肤网格节点数与 rig-meta 声明一致', () => {
-    const skinNodes = glb.locals.filter((n) => n.name.includes('__') && n.name.includes('skin'))
-    expect(skinNodes.length).toBe((meta.attachments ?? []).length)
+  it('glb 里所有蒙皮网格节点都被 rig-meta 声明为皮肤图层', () => {
+    const attachments = meta.attachments ?? []
+    // 蒙皮网格以节点上的 skin 索引为判据，不依赖节点命名（胶囊皮肤与完整体表命名不一致）
+    const skinned = glb.locals.filter((n) => n.skin !== undefined)
+    expect(skinned.length).toBeGreaterThanOrEqual(1)
+    const declared = new Set(attachments.map((a) => a.id))
+    for (const n of skinned) {
+      expect(declared.has(n.name), `皮肤网格 ${n.name} 未在 rig-meta 声明`).toBe(true)
+    }
+    expect(attachments.every((a) => glb.byName.has(a.id))).toBe(true)
   })
 
   it('骨骼分组仍覆盖全部 body（皮肤/肌肉不混入 parts）', () => {
