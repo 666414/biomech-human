@@ -153,5 +153,9 @@ Vite 会把两套（`libs/draco` 与 `libs/draco/gltf`）解码器作为 `dist/a
 - [ ] Chrome / Safari / Edge / Firefox 最新版各走一遍三联动、分层控件、全屏图表、知识卡抽屉
 - [ ] 手机 / 平板 / 桌面真机：模型加载、触控拾取、移动端 Tab 布局；记录真机 Lighthouse（预期高于本地 headless）
 - [ ] 校内静态服务器（Nginx 或 IIS）部署一次：`glb` 为 `model/gltf-binary`、`wasm` 为 `application/wasm`
-- [ ] 离线：本地静态服务器 + DevTools Offline 刷新，验证 SW 预缓存入口页与已访问场景
+- [x] 离线：✅ 已验证（2026-11-06，headless Edge + CDP `Network.emulateNetworkConditions offline`）——
+  `vite preview` 在线加载（SW `activated`）后切离线刷新，`data-debug` 实测
+  `modelLoaded:true, bodyCount:81, layerMeshes {skeleton:132, muscle:8, skin:1}`，无 console/pageerror；
+  证明 SW 预缓存覆盖入口页、glb、Draco wasm 与已访问场景 JSON。
+  （真机 DevTools Offline 复验可与真机项一并进行，非阻塞）
 - [ ] 子目录部署（如 `/demo/`）验证资源与 SW scope 正确。
