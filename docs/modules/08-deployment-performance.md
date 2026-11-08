@@ -167,7 +167,23 @@ Vite 会把两套（`libs/draco` 与 `libs/draco/gltf`）解码器作为 `dist/a
 
 ### 6. 人工验收清单（自动化不可达）
 
-- [ ] Chrome / Safari / Edge / Firefox 最新版各走一遍三联动、分层控件、全屏图表、知识卡抽屉
+- [~] 浏览器走查：**Chrome / Edge / Firefox 已通过自动化走查（2026-11-08）**，Safari 待 macOS/iOS 人工补测。
+  - 口径：`vite preview` 产物包 + puppeteer-core 驱动，各浏览器独立跑一遍
+    加载 → 皮肤/肌肉/骨骼三开关（关闭/恢复均比对画布像素）→ 播放 2 s → 截图。
+  - 实测（三者同一断言全绿）：
+
+    | 浏览器 | 版本 | 模型加载 | bodyCount | layerMeshes | 三开关画面变化 | 播放帧推进 | 控制台错误 |
+    | --- | --- | --- | --- | --- | --- | --- | --- |
+    | Chrome | 本机稳定版 | ✅ 2.2 s | 81 | 132 / 8 / 1 | 3/3 | +18 帧 | 0 |
+    | Edge | 本机稳定版 | ✅ 2.3 s | 81 | 132 / 8 / 1 | 3/3 | +14 帧 | 0 |
+    | Firefox | 137.0.1 | ✅ 3.7 s | 81 | 132 / 8 / 1 | 3/3 | +287 帧 | 0 |
+
+  - 说明：bodyCount 81 = 80 rig body + 1 皮肤节点（`skin_mesh`），与当前资产一致；
+    Firefox 走 WebDriver BiDi，`setViewport` 不受支持（改用窗口参数），元素截图受限时回退整页截图。
+  - 截图：[browser-chrome.png](shots/browser-chrome.png) / [browser-edge.png](shots/browser-edge.png) /
+    [browser-firefox.png](shots/browser-firefox.png)。
+  - **Safari 在本机（Windows）无法覆盖**：无 Windows 版 Safari，webkit 引擎差异（尤其 WebGL 精度、
+    `MeshPhysicalMaterial` 的 clearcoat/sheen）必须在 macOS 或 iOS 真机上补测，仍为未关闭项。
 - [ ] 手机 / 平板 / 桌面真机：模型加载、触控拾取、移动端 Tab 布局；记录真机 Lighthouse（预期高于本地 headless）
 - [ ] 校内静态服务器（Nginx 或 IIS）部署一次：`glb` 为 `model/gltf-binary`、`wasm` 为 `application/wasm`
 - [x] 离线：✅ 已验证（2026-11-06，headless Edge + CDP `Network.emulateNetworkConditions offline`）——
