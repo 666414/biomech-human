@@ -11,6 +11,14 @@ export const SCENE_IDS = [
 
 export type SceneId = (typeof SCENE_IDS)[number]
 
+/**
+ * 静态资源 URL：拼 Vite 基座（`base: './'`），保证产物在任意子目录部署时
+ * 数据请求跟着落到子目录下，而不是写死站点根。传参可带或不带前导 `/`。
+ */
+export function assetUrl(path: string): string {
+  return `${import.meta.env.BASE_URL}${path.replace(/^\/+/, '')}`
+}
+
 async function fetchJson<T>(url: string): Promise<T> {
   const res = await fetch(url)
   if (!res.ok) {
@@ -21,12 +29,12 @@ async function fetchJson<T>(url: string): Promise<T> {
 
 /** 模型刚体层级与关节定义 */
 export function loadRigMeta(): Promise<RigMeta> {
-  return fetchJson<RigMeta>('/data/models/rig-meta.json')
+  return fetchJson<RigMeta>(assetUrl('/data/models/rig-meta.json'))
 }
 
 /** 按场景 id 加载场景数据 */
 export function loadScene(id: string): Promise<SceneData> {
-  return fetchJson<SceneData>(`/data/scenes/${id}.json`)
+  return fetchJson<SceneData>(assetUrl(`/data/scenes/${id}.json`))
 }
 
 /**
@@ -35,7 +43,7 @@ export function loadScene(id: string): Promise<SceneData> {
  */
 export async function loadKnowledge(): Promise<KnowledgeCard[]> {
   try {
-    const res = await fetch('/data/knowledge/knowledge.json')
+    const res = await fetch(assetUrl('/data/knowledge/knowledge.json'))
     if (!res.ok) return []
     return (await res.json()) as KnowledgeCard[]
   } catch {

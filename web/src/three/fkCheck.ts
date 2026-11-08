@@ -11,6 +11,7 @@
  * 现场新建 PoseMap，捕获到的"rest"会是已摆姿势的变换，导致关节复合两次。
  */
 import * as THREE from 'three'
+import { assetUrl } from '../data'
 import type { JointAngles } from '../types'
 import { applyPose, resetPose, type PoseMap } from './poseMap'
 
@@ -49,8 +50,8 @@ export interface FkCheckResult {
   pass: boolean
 }
 
-/** 拉取参考真值（优先 public 数据目录） */
-export async function loadFkReference(url = '/data/fk-reference.json'): Promise<FkReference> {
+/** 拉取参考真值（优先 public 数据目录；URL 走基座，支持子目录部署） */
+export async function loadFkReference(url = assetUrl('/data/fk-reference.json')): Promise<FkReference> {
   const res = await fetch(url)
   if (!res.ok) throw new Error(`加载 ${url} 失败：HTTP ${res.status}`)
   return (await res.json()) as FkReference

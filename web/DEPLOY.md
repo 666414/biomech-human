@@ -88,6 +88,11 @@ CI 中要么先把产物提交进仓库（见下节「产物入库」），要�
 
 把 `web/dist/` 下**全部内容**（含 `data/`、`draco/`、`sw.js`）拷到站点目录即可，无运行时依赖。
 
+**数据请求必须走基座**：代码里取静态数据一律用 `assetUrl('/data/...')`（`src/data.ts`），
+它拼 `import.meta.env.BASE_URL`，子目录部署时请求会落到 `<子目录>/data/...`。
+**禁止**写死 `'/data/...'` 这类站点根绝对路径——即使 `base: './'` 正确，写死根路径的资源在子目录下也会 404
+（P5 实测踩坑，见 §7 验证记录）。新增数据文件时同样遵守此约定。
+
 Nginx 参考配置：
 
 ```nginx
@@ -160,3 +165,21 @@ U 盘分发时附一行启动命令（或打包一个 `start.cmd` 写入上述�
 - [ ] `sw.js` 返回 200（https/localhost），DevTools 中 SW 状态为 activated
 - [ ] 部署在子目录（如 `/demo/`）时资源与 SW 均正常（scope 从注册路径自动推导）
 - [ ] `?fkcheck=1` 控制台输出 FK 对账误差仍为 1e-7 量级（验证 Draco 压缩未破坏姿态映射）
+
+### 部署形态演练记录（2026-11-08，本地静态服务器复现）
+
+用 Node http 服务把 `dist/` 挂到子路径并按本文 MIME / 缓存头口径托管，puppeteer 驱动 Chromium 验收：
+
+| 基座 | 数据请求越界 | 模型加载 | bodyCount | layerMeshes | SW scope | 控制台错误 |
+|---|---|---|---|---|---|---|
+| `/biomech/` | 0 | 4348 ms | 81 | 132 / 8 / 1 | `http://localhost:8099/biomech/` | 0 |
+| `/`（回归） | 0 | 4459 ms | 81 | 132 / 8 / 1 | `http://localhost:8099/` | 0 |
+
+- 上述「首屏模型 / MIME / SW / 子目录」四条在演练中均通过（`.glb → model/gltf-binary`、
+  `.wasm → application/wasm`、`sw.js → no-cache`）。
+- 子路径首跑为失败：`/data/models/human.glb` 等 4 个请求越出前缀 404、92 s 后 `modelLoaded:false`；
+  根因是 `data.ts` / `Viewport.tsx` / `fkCheck.ts` 写死站点根路径，已统一改为 `assetUrl()`（见 §4）。
+  截图：[deploy-subpath.png](../docs/reports/shots/deploy-subpath.png)
+- **仍未覆盖**：校内真实服务器（Nginx/IIS 实际配置、HTTPS 证书下的 SW 注册）与真机（手机/平板）——
+  这两项需在实际环境人工执行，演练只证明产物自身的部署形态无缺陷。
+

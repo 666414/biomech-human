@@ -15,6 +15,7 @@
  */
 import { useEffect, useImperativeHandle, useRef, useState, type Ref } from 'react'
 import { useStore } from '../store'
+import { assetUrl } from '../data'
 import type { JointAngles, MuscleMeta, PartGroup } from '../types'
 import { checkPoseMap, formatFkResult, loadFkReference } from '../three/fkCheck'
 import { SceneManager, type DebugState, type Quality, type ViewPreset } from '../three/SceneManager'
@@ -141,7 +142,7 @@ export default function Viewport({
 
     const load = async () => {
       try {
-        await sm!.loadModel('/data/models/human.glb', (pct) => {
+        await sm!.loadModel(assetUrl('/data/models/human.glb'), (pct) => {
           if (!cancelled) setProgress(pct)
           onProgress?.(pct)
         })
@@ -151,7 +152,7 @@ export default function Viewport({
 
         // 肌肉示意线数据（执行器 → 肌腱站点折线）：加载失败仅降级为空图层
         try {
-          const res = await fetch('/data/models/muscle-meta.json')
+          const res = await fetch(assetUrl('/data/models/muscle-meta.json'))
           if (res.ok) {
             const meta = (await res.json()) as MuscleMeta
             if (!cancelled) {

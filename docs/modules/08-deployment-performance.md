@@ -185,10 +185,20 @@ Vite 会把两套（`libs/draco` 与 `libs/draco/gltf`）解码器作为 `dist/a
   - **Safari 在本机（Windows）无法覆盖**：无 Windows 版 Safari，webkit 引擎差异（尤其 WebGL 精度、
     `MeshPhysicalMaterial` 的 clearcoat/sheen）必须在 macOS 或 iOS 真机上补测，仍为未关闭项。
 - [ ] 手机 / 平板 / 桌面真机：模型加载、触控拾取、移动端 Tab 布局；记录真机 Lighthouse（预期高于本地 headless）
-- [ ] 校内静态服务器（Nginx 或 IIS）部署一次：`glb` 为 `model/gltf-binary`、`wasm` 为 `application/wasm`
+- [~] 校内静态服务器（Nginx 或 IIS）部署一次：**部署形态已于本地静态服务器演练通过（2026-11-08）**，
+  真实 Nginx/IIS 与 HTTPS 证书下的 SW 注册仍需在目标环境人工执行。
+  - 口径：Node http 服务把 `dist/` 挂到子路径，按 `DEPLOY.md` 的 MIME / 缓存头口径托管，
+    puppeteer 驱动 Chromium 验收；`.glb → model/gltf-binary`、`.wasm → application/wasm`、`sw.js → no-cache` 均命中。
+  - 结果见下方「子目录部署」条目。
 - [x] 离线：✅ 已验证（2026-11-06，headless Edge + CDP `Network.emulateNetworkConditions offline`）——
   `vite preview` 在线加载（SW `activated`）后切离线刷新，`data-debug` 实测
   `modelLoaded:true, bodyCount:81, layerMeshes {skeleton:132, muscle:8, skin:1}`，无 console/pageerror；
   证明 SW 预缓存覆盖入口页、glb、Draco wasm 与已访问场景 JSON。
   （真机 DevTools Offline 复验可与真机项一并进行，非阻塞）
-- [ ] 子目录部署（如 `/demo/`）验证资源与 SW scope 正确。
+- [x] 子目录部署（如 `/demo/`）验证资源与 SW scope 正确：✅ 已验证（2026-11-08，`/biomech/` 与 `/` 双基座）
+  - `/biomech/`：数据请求越界 0、模型 4348 ms、`bodyCount:81`、`layerMeshes 132/8/1`、
+    SW scope `http://localhost:8099/biomech/`、控制台错误 0；`/` 回归同样通过（4459 ms）。
+  - 首跑暴露真实缺陷：`data.ts` / `Viewport.tsx` / `fkCheck.ts` 写死 `/data/...` 站点根路径，
+    子路径下 4 个数据请求 404、`modelLoaded:false`（92 s）。已统一改为 `assetUrl()` 拼 `BASE_URL`，
+    并在 `web/DEPLOY.md` §4 写入「新增数据请求必须走 `assetUrl()`」的约定。
+  - 截图：`docs/reports/shots/deploy-subpath.png`。
