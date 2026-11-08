@@ -1,6 +1,7 @@
 # 上线前人工验收执行包（2026-11-08）
 
-本包用于执行 P5 剩余 4 项**只能在真实环境完成**的验收。每项给出「前置 → 步骤 → 判据 → 记录 → 失败排查」，
+本包用于执行 P5 剩余 3 项**只能在真实环境完成**的验收（真机 / Safari / 知识卡专家终审；
+校内服务器部署项已按 2026-11-08 决定取消，见 §3）。每项给出「前置 → 步骤 → 判据 → 记录 → 失败排查」，
 执行完把结论回填到 `docs/modules/08-deployment-performance.md` §6 与 `docs/modules/00-overview.md` 排期表 P5 行。
 
 ## 0. 包内材料
@@ -22,7 +23,7 @@ JSON.parse(document.querySelector('[data-debug]').getAttribute('data-debug'))
 
 ## 1. 真机验收（手机 / 平板 / 桌面）
 
-**前置**：站点已部署到 **https**（或真机访问 localhost 不可行时用 §3 的校内 https 地址）。
+**前置**：站点已部署到 **https**（GitHub Pages / Vercel / 任意 https 静态托管均可，参见 `web/DEPLOY.md`）。
 注意：`http://<局域网 IP>` **不是安全上下文，Service Worker 不会注册**，离线能力无法在局域网 http 下验收。
 
 **设备矩阵（建议）**：iPhone（Safari）、Android 手机（Chrome）、iPad（Safari）、桌面 1440p 以上（Chrome/Edge）。
@@ -47,8 +48,8 @@ JSON.parse(document.querySelector('[data-debug]').getAttribute('data-debug'))
 |---|---|---|---|---|---|---|---|---|---|---|
 |  |  |  |  |  |  |  |  |  |  |  |
 
-**失败排查**：先看控制台错误 + `data-debug` 的 `lastError` / `attempts`；模型 404 查 §3 的 MIME 与路径；
-弱机卡顿可加 `?quality=low`（或 `?lite=1`）复测，用于区分「设备性能」与「实现缺陷」。
+**失败排查**：先看控制台错误 + `data-debug` 的 `lastError` / `attempts`；模型 404 查托管平台的 MIME 配置
+（`web/DEPLOY.md` §4）；弱机卡顿可加 `?quality=low`（或 `?lite=1`）复测，用于区分「设备性能」与「实现缺陷」。
 
 ## 2. Safari（macOS / iOS）专项
 
@@ -72,55 +73,15 @@ Windows 无 Safari，必须在此项补测。重点不是功能，而是 **WebKi
 **已知风险**：WebKit 对 `MeshPhysicalMaterial` 的 `clearcoat/sheen` 计算与 Chromium 不完全一致，
 若出现明显偏差，按截图记录后交回工程侧调材质参数（不改验收口径）。
 
-## 3. 校内静态服务器部署（Nginx / IIS）
+## 3. 校内静态服务器部署（已取消）
 
-**前置**：服务器已装 Nginx 或 IIS，站点支持 https（离线能力与 SW 需要安全上下文）。
+**2026-11-08 决定：取消该项**，不再部署校内 Nginx/IIS 服务器，发布走 GitHub Pages / Vercel / 任意静态托管
+（`web/DEPLOY.md` 三通道说明保持有效）。原人工验收要求随之关闭。
 
-**步骤**：
-
-1. 解压 `release/biomech-web-dist-2026-11-08.zip` 到站点目录（例：`/var/www/biomech` 或 `D:\sites\biomech`）。
-2. 按 `web/DEPLOY.md` §4 配 MIME 与缓存头（`glb → model/gltf-binary`、`wasm → application/wasm`、
-   `sw.js → no-cache`、`assets/ → 长缓存`）；子目录部署时 `location` 前缀同步改为该子目录。
-3. 浏览器访问站点地址，跑 `DEPLOY.md` §7 的 6 条清单。
-
-**服务器侧自检（在服务器或任意能访问站点的机器执行）**：
-
-```powershell
-$u = 'https://biomech.example.edu/'          # 子目录部署示例：'https://.../demo/'
-foreach ($p in 'data/models/human.glb','draco/draco_decoder.wasm','sw.js','data/models/rig-meta.json') {
-  $r = Invoke-WebRequest "$u$p" -Method Head
-  "{0,-32} {1}  {2}" -f $p, $r.StatusCode, $r.Headers['Content-Type']
-}
-# 期望：glb 200 / model/gltf-binary；wasm 200 / application/wasm；sw.js 200 且无强缓存；rig-meta 200 / application/json
-```
-
-**判据**：上述 4 条 HTTP 结果符合期望 + 首屏模型可见 + DevTools SW 状态 `activated` 且 scope 等于部署路径
-+ 5 场景切换正常 + `?fkcheck=1` 控制台误差为 1e-7 量级（Draco 未破坏姿态映射）。
-
-**上传包本地演练结果（2026-11-08，已按本节步骤跑通）**：把本包 zip 解压到临时站点目录，按上表口径以 `/biomech/`
-子路径托管（MIME/缓存头与 DEPLOY.md §4 一致），逐项结果：
-
-| 检查 | 实测 |
-|---|---|
-| `.glb` | 200 / `model/gltf-binary` |
-| `.wasm` | 200 / `application/wasm` |
-| `sw.js` | 200 / `no-cache` |
-| `rig-meta.json` | 200 / `application/json` |
-| 首屏 | `modelLoaded:true`、`bodyCount:81`、`layerMeshes 132/8/1`，越界请求 0，控制台错误 0 |
-| SW | `active`，scope `http://localhost:8098/biomech/` |
-| `?fkcheck=1` | 通过：最大位置差 1.085e-7 m、角度差 6.768e-5 rad |
-
-截图：[17-zip-deploy.png](shots/17-zip-deploy.png)。**仍需在真实服务器人工确认的只剩**：Nginx/IIS 版本差异与
-HTTPS 证书下的 SW 注册、5 个场景逐个切换、页面观感。
-
-**记录表**：
-
-| 站点 URL | 服务器/版本 | 根目录 or 子目录 | 4 条 HTTP | 首屏 | SW scope | fkcheck | 结论 |
-|---|---|---|---|---|---|---|---|
-|  |  |  |  |  |  |  |  |
-
-**失败排查**：404 → 检查是否漏拷 `data/`/`draco/`；MIME 错 → 检查 `types`/MIME 映射；
-SW 未注册 → 必须 https（证书自签需在设备信任）；`ImportError` 类报错 → 浏览器版本过低（需 WebGL2）。
+作为留档：交付包 zip 在本地按 DEPLOY.md §4 口径（`/biomech/` 子路径 + MIME/缓存头）演练已通过——
+`.glb/.wasm/sw.js/rig-meta` 四点 200 且 MIME 正确、首屏 `bodyCount:81`、SW `active` scope 正确、
+`?fkcheck=1` 最大位置差 1.085e-7 m（截图 [17-zip-deploy.png](shots/17-zip-deploy.png)）。
+若日后改主意要自建服务器，按 `web/DEPLOY.md` §4 配置即可，产物本身已被证明无部署形态缺陷。
 
 ## 4. 知识卡医学专家终审（41 张）
 
@@ -151,10 +112,10 @@ SW 未注册 → 必须 https（证书自签需在设备信任）；`ImportError
 
 ## 5. 关闭标准与回填
 
-4 项全部完成后：
+3 项全部完成后：
 
-1. `docs/modules/08-deployment-performance.md` §6：把「真机」「校内服务器」由 `[~]` 改 `[x]` 并补实测数字，
-   Safari 项补版本与结论、删除「待补测」表述。
-2. `docs/modules/00-overview.md` 排期表 P5 行：把「4 浏览器/真机/校内服务器/离线四项人工验收待执行」改为已完成。
+1. `docs/modules/08-deployment-performance.md` §6：把「真机」由 `[~]` 改 `[x]` 并补实测数字，
+   Safari 项补版本与结论、删除「待补测」表述（校内服务器项已按取消决定关闭）。
+2. `docs/modules/00-overview.md` 排期表 P5 行：把人工验收待执行表述改为已完成（注明校内服务器项取消）。
 3. 若过程中发现缺陷：按问题类型回到 01（渲染）/02（交互）/03（图表）/08（部署）对应文档记录根因与修复，
    不直接改验收口径。

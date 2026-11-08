@@ -196,8 +196,10 @@ Vite 会把两套（`libs/draco` 与 `libs/draco/gltf`）解码器作为 `dist/a
   - 截图：[13-mobile-3d.png](shots/13-mobile-3d.png) / [14-mobile-picked.png](shots/14-mobile-picked.png) /
     [15-mobile-charts.png](shots/15-mobile-charts.png) / [16-mobile-knowledge.png](shots/16-mobile-knowledge.png)。
   - 说明：模拟覆盖不到真机 GPU 性能、iOS Safari 引擎差异与真实触感区，不能替代真机项。
-- [~] 校内静态服务器（Nginx 或 IIS）部署一次：**部署形态已于本地静态服务器演练通过（2026-11-08）**，
-  真实 Nginx/IIS 与 HTTPS 证书下的 SW 注册仍需在目标环境人工执行。
+- [x] 校内静态服务器（Nginx 或 IIS）部署一次：**已取消（2026-11-08 用户决定）**，发布走 GitHub Pages /
+  Vercel / 任意静态托管。关闭前部署形态已在本地静态服务器演练通过（`/biomech/` 与 `/` 双基座，
+  MIME / 缓存头 / SW scope / fkcheck 全绿，交付包 zip 与 `dist` 逐文件 SHA-256 一致），
+  产物本身无部署形态缺陷；`web/DEPLOY.md` §4 的 Nginx/IIS 配置说明保留备用。
   - 口径：Node http 服务把 `dist/` 挂到子路径，按 `DEPLOY.md` 的 MIME / 缓存头口径托管，
     puppeteer 驱动 Chromium 验收；`.glb → model/gltf-binary`、`.wasm → application/wasm`、`sw.js → no-cache` 均命中。
   - 结果见下方「子目录部署」条目。
