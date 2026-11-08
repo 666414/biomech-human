@@ -7,7 +7,7 @@
 
 | 材料 | 路径 | 说明 |
 |---|---|---|
-| 部署产物 | `release/biomech-web-dist-2026-11-08.zip`（1.5 MB，23 个条目） | 解压即站点根内容：`index.html` + `assets/` + `data/` + `draco/` + `sw.js` |
+| 部署产物 | `release/biomech-web-dist-2026-11-08.zip`（1.5 MB，23 个条目） | 解压即站点根内容：`index.html` + `assets/` + `data/` + `draco/` + `sw.js`；已校验与 `web/dist` 逐文件 SHA-256 一致（23/23） |
 | 部署指南 | `web/DEPLOY.md` | Nginx/IIS 配置、MIME、缓存头、SW 策略 |
 | 已完成的自动化证据 | `docs/modules/08-deployment-performance.md` §6 | Chrome/Edge/Firefox 走查、离线、子路径部署、移动端模拟 |
 | 知识卡与 AI 预审 | `content/knowledge/knowledge.json`、`content/knowledge/REVIEW.md` | 41 张卡；预审已修订 6 处、新增 1 卡 |
