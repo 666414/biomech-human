@@ -167,6 +167,9 @@ Vite 会把两套（`libs/draco` 与 `libs/draco/gltf`）解码器作为 `dist/a
 
 ### 6. 人工验收清单（自动化不可达）
 
+> 执行材料与判据见 [上线前人工验收执行包](../reports/2026-11-08-manual-acceptance-package.md)：
+> 含部署产物（`release/biomech-web-dist-2026-11-08.zip`）、逐项步骤/判据/记录表、服务器侧 HTTP 自检命令。
+
 - [~] 浏览器走查：**Chrome / Edge / Firefox 已通过自动化走查（2026-11-08）**，Safari 待 macOS/iOS 人工补测。
   - 口径：`vite preview` 产物包 + puppeteer-core 驱动，各浏览器独立跑一遍
     加载 → 皮肤/肌肉/骨骼三开关（关闭/恢复均比对画布像素）→ 播放 2 s → 截图。

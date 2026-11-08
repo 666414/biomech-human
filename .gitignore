@@ -7,6 +7,8 @@ __pycache__/
 /assets/
 node_modules/
 web/dist/
+# 人工验收/交付打包产物（dist 压缩包，按需生成，不入库）
+release/
 web/public/data/*
 web/public/draco/
 # FK 对账参考真值（pipeline/tools/fk_reference.py 生成，7KB，供浏览器 ?fkcheck=1 对账）
