@@ -97,6 +97,22 @@ foreach ($p in 'data/models/human.glb','draco/draco_decoder.wasm','sw.js','data/
 **判据**：上述 4 条 HTTP 结果符合期望 + 首屏模型可见 + DevTools SW 状态 `activated` 且 scope 等于部署路径
 + 5 场景切换正常 + `?fkcheck=1` 控制台误差为 1e-7 量级（Draco 未破坏姿态映射）。
 
+**上传包本地演练结果（2026-11-08，已按本节步骤跑通）**：把本包 zip 解压到临时站点目录，按上表口径以 `/biomech/`
+子路径托管（MIME/缓存头与 DEPLOY.md §4 一致），逐项结果：
+
+| 检查 | 实测 |
+|---|---|
+| `.glb` | 200 / `model/gltf-binary` |
+| `.wasm` | 200 / `application/wasm` |
+| `sw.js` | 200 / `no-cache` |
+| `rig-meta.json` | 200 / `application/json` |
+| 首屏 | `modelLoaded:true`、`bodyCount:81`、`layerMeshes 132/8/1`，越界请求 0，控制台错误 0 |
+| SW | `active`，scope `http://localhost:8098/biomech/` |
+| `?fkcheck=1` | 通过：最大位置差 1.085e-7 m、角度差 6.768e-5 rad |
+
+截图：[17-zip-deploy.png](shots/17-zip-deploy.png)。**仍需在真实服务器人工确认的只剩**：Nginx/IIS 版本差异与
+HTTPS 证书下的 SW 注册、5 个场景逐个切换、页面观感。
+
 **记录表**：
 
 | 站点 URL | 服务器/版本 | 根目录 or 子目录 | 4 条 HTTP | 首屏 | SW scope | fkcheck | 结论 |
