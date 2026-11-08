@@ -184,7 +184,15 @@ Vite 会把两套（`libs/draco` 与 `libs/draco/gltf`）解码器作为 `dist/a
     [browser-firefox.png](shots/browser-firefox.png)。
   - **Safari 在本机（Windows）无法覆盖**：无 Windows 版 Safari，webkit 引擎差异（尤其 WebGL 精度、
     `MeshPhysicalMaterial` 的 clearcoat/sheen）必须在 macOS 或 iOS 真机上补测，仍为未关闭项。
-- [ ] 手机 / 平板 / 桌面真机：模型加载、触控拾取、移动端 Tab 布局；记录真机 Lighthouse（预期高于本地 headless）
+- [~] 手机 / 平板 / 桌面真机：**移动端布局与触控已用 Chrome 设备模拟（390×844 / DPR 3 / touch / 移动 UA）通过（2026-11-08）**，
+  真机（iOS/Android 实机、平板、真机 Lighthouse）仍需人工执行。
+  - 实测：自动降质生效（宽 < 768 走 low 档）、模型 `modelLoaded:true`、`bodyCount:81`、
+    外壳为三 Tab（3D/曲线/知识，默认 3D）、底部时间轴常驻；触控点选命中 `pelvis`（部位卡出现）。
+  - Tab 切换：曲线（`.app-charts-tab` 渲染、视口 `slot-hidden` 但 canvas 尺寸保留）→ 知识（选中部位卡非空态）
+    → 回 3D（视口恢复、`modelLoaded` 仍为 true，WebGL 上下文未重建）；播放 2 s 渲染帧 567→893；控制台错误 0。
+  - 截图：[13-mobile-3d.png](shots/13-mobile-3d.png) / [14-mobile-picked.png](shots/14-mobile-picked.png) /
+    [15-mobile-charts.png](shots/15-mobile-charts.png) / [16-mobile-knowledge.png](shots/16-mobile-knowledge.png)。
+  - 说明：模拟覆盖不到真机 GPU 性能、iOS Safari 引擎差异与真实触感区，不能替代真机项。
 - [~] 校内静态服务器（Nginx 或 IIS）部署一次：**部署形态已于本地静态服务器演练通过（2026-11-08）**，
   真实 Nginx/IIS 与 HTTPS 证书下的 SW 注册仍需在目标环境人工执行。
   - 口径：Node http 服务把 `dist/` 挂到子路径，按 `DEPLOY.md` 的 MIME / 缓存头口径托管，
