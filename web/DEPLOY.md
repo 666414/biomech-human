@@ -157,10 +157,14 @@ U 盘分发时附一行启动命令（或打包一个 `start.cmd` 写入上述�
 - 仅生产构建注册（`src/main.tsx` 中 `import.meta.env.PROD`），开发服务器不注册、不缓存。
 - 策略：导航 network-first（失败回落缓存入口页）；`data/` stale-while-revalidate（二次访问近离线）；
   `assets/`、`draco/`、favicon 等 cache-first。判定逻辑见 `src/sw/policy.ts`（有 vitest 全量覆盖）。
+- **首访即离线**（v3）：glb 在 SW 接管前就开始加载（注册挂在 window load 之后），fetch 拦截不到，
+  故 `human.glb` 直接进预缓存清单；其余同源资源由页面在 SW ready 后把
+  `performance.getEntriesByType('resource')` 的 URL `postMessage` 给 SW 回填（`sw.js` 底部 message 监听）。
+  没有这套机制时，首访后立即离线会白屏（首屏 hashed 资源不在缓存）——GitHub Pages 实测踩坑后修复。
 - 缓存版本号 `CACHE_VERSION` 在 `public/sw.js` 手工维护：**预缓存清单或策略变化时递增**，
   activate 阶段会删掉旧代缓存完成整池换代；hashed 资源改名即自动失效，无需递增。
 - 首次部署后建议在 DevTools → Application → Service Workers 勾选 Update on reload 验证；
-  离线验收：切到 Offline 后刷新应仍能进入页面并加载已缓存场景。
+  离线验收：切到 Offline 后刷新应仍能进入页面并加载已缓存场景（GitHub Pages 线上实测通过，含首访即离线）。
 
 ## 7. 部署后验收清单
 

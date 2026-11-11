@@ -20,11 +20,13 @@
  * data/ 内容更新无需递增（stale-while-revalidate 后台刷新）。
  */
 
-const CACHE_VERSION = 'p5-skeleton-v1'
+const CACHE_VERSION = 'p5-skeleton-v3'
 
-// 预缓存清单：入口页（离线兜底）+ 模型元数据。hashed 产物名无法硬编码，
-// 由 fetch 策略的 runtime 回填兜底。
-const PRECACHE_URLS = ['./', './data/models/rig-meta.json']
+// 预缓存清单：入口页（离线兜底）+ 模型元数据 + 模型本体。glb 在 SW 接管前就开始
+// 加载（main.tsx 于 window load 才注册），fetch 拦截不到；靠 HTTP 缓存离线兜底有
+// max-age 时效风险，故显式预缓存。hashed 产物名无法硬编码，由 fetch 策略的 runtime
+// 回填 + 页面 postMessage('precache-urls') 回填（见底部 message 监听）补齐。
+const PRECACHE_URLS = ['./', './data/models/rig-meta.json', './data/models/human.glb']
 
 // —— 策略分类（与 src/sw/policy.ts 的 classifyRequest 保持一致）——
 // 部署根从 self.registration.scope 推导（sw 注册在部署根 scope）：base './' 下产物
@@ -138,3 +140,21 @@ async function handleCacheFirst(request) {
   if (fresh && fresh.ok) cache.put(request, fresh.clone()).catch(() => {})
   return fresh
 }
+
+// 首访资源回填（ExtendableMessageEvent）：页面在 SW ready 后把本次加载过的同源资源
+// URL 发来，逐个入缓存（allSettled 容错）。URL 先过 classifyRequest，只接管部署根内
+// 的 GET 资源，跨域/根外路径一律丢弃。
+self.addEventListener('message', (event) => {
+  const data = event.data
+  if (!data || data.type !== 'precache-urls' || !Array.isArray(data.urls)) return
+  const scope = self.registration ? self.registration.scope : self.location.href
+  const urls = data.urls.filter(
+    (u) => typeof u === 'string' && classifyRequest(u, scope, { method: 'GET' }) !== 'pass',
+  )
+  event.waitUntil(
+    caches
+      .open(CACHE_VERSION)
+      .then((cache) => Promise.allSettled(urls.map((u) => cache.add(u))))
+      .then(() => undefined),
+  )
+})

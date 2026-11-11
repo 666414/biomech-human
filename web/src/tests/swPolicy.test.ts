@@ -150,9 +150,18 @@ describe('classifyRequest：mode 缺省（XHR/延迟场景退化）', () => {
 describe('public/sw.js 原文防漂移（内嵌策略与 policy.ts 一致性的锚点）', () => {
   const swSource = readFileSync(resolve(process.cwd(), 'public/sw.js'), 'utf8')
 
-  it('缓存 key 版本化 p5-skeleton-v1，且含 CACHE_VERSION 递增语义注释', () => {
-    expect(swSource).toContain("const CACHE_VERSION = 'p5-skeleton-v1'")
+  it('缓存 key 版本化 p5-skeleton-v3，且含 CACHE_VERSION 递增语义注释', () => {
+    expect(swSource).toContain("const CACHE_VERSION = 'p5-skeleton-v3'")
     expect(swSource).toContain('CACHE_VERSION 递增语义')
+  })
+
+  it('首访资源回填：postMessage precache-urls → SW message 监听入缓存', () => {
+    expect(swSource).toContain("data.type !== 'precache-urls'")
+    expect(swSource).toContain('ExtendableMessageEvent')
+  })
+
+  it('预缓存含 glb（SW 接管前开始加载，fetch 拦截不到）', () => {
+    expect(swSource).toContain('./data/models/human.glb')
   })
 
   it('install 预缓存入口页与 rig-meta.json，并 skipWaiting', () => {

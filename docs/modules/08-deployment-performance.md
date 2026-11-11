@@ -213,6 +213,10 @@ Vite 会把两套（`libs/draco` 与 `libs/draco/gltf`）解码器作为 `dist/a
   `modelLoaded:true, bodyCount:81, layerMeshes {skeleton:132, muscle:8, skin:1}`，无 console/pageerror；
   证明 SW 预缓存覆盖入口页、glb、Draco wasm 与已访问场景 JSON。
   （真机 DevTools Offline 复验可与真机项一并进行，非阻塞）
+  **线上复验（2026-11-11，GitHub Pages）**：首访（全新 profile）→ 5 场景逐个切换 → CDP 离线刷新，
+  `modelLoaded:true`、0 失败请求。期间发现并修复真实缺陷「首访即离线白屏」：首屏 hashed 资源与 glb
+  在 SW 接管前加载完、从未入缓存——修复为 glb 预缓存（`p5-skeleton-v3`）+ 页面 postMessage 资源回填，
+  见 `web/DEPLOY.md` §6。同场实测：5 场景切换全绿、`?fkcheck=1` 最大位置差 1.085e-7 m、控制台错误 0。
 - [x] 子目录部署（如 `/demo/`）验证资源与 SW scope 正确：✅ 已验证（2026-11-08，`/biomech/` 与 `/` 双基座）
   - `/biomech/`：数据请求越界 0、模型 4348 ms、`bodyCount:81`、`layerMeshes 132/8/1`、
     SW scope `http://localhost:8099/biomech/`、控制台错误 0；`/` 回归同样通过（4459 ms）。
