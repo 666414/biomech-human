@@ -26,9 +26,10 @@ npm run build            # tsc -b && vite build → web/dist
 
 | 文件 | 体积 | gzip | 说明 |
 |---|---|---|---|
-| `assets/index-*.js` | 34.6 kB | 12.7 kB | 业务代码 |
+| `assets/index-*.js` | 40.6 kB | 14.8 kB | 业务代码 |
+| `assets/ParamCharts-*.js` | 5.7 kB | 2.5 kB | 曲线图组件（懒加载，随 echarts chunk 按需拉取） |
 | `assets/react-vendor-*.js` | 219.3 kB | 68.5 kB | react/react-dom/scheduler/zustand |
-| `assets/echarts-*.js` | 559.2 kB | 188.7 kB | echarts + zrender |
+| `assets/echarts-*.js` | 559.2 kB | 188.7 kB | echarts + zrender（**懒加载**：首帧后按需，移动端首屏不加载） |
 | `assets/three-*.js` | 645.7 kB | 161.2 kB | three.js |
 | `assets/index-*.css` | 8.7 kB | 2.3 kB | 样式 |
 | `sw.js` | 6.2 kB | — | Service Worker（不 hash，须 no-cache 托管） |

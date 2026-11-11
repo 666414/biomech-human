@@ -14,8 +14,7 @@
  * 曲线系列点击 → onSeriesClick 查卡；卡内「定位」→ focusPart + selectPart；
  * 键盘空格 = 播放/暂停（输入控件/按钮聚焦时交给原生行为）。
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import ParamCharts from './charts/ParamCharts'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { buildChartSets } from './charts/buildChartSets'
 import KnowledgePanel from './knowledge/KnowledgePanel'
 import { findSeriesCard } from './knowledge/knowledge'
@@ -29,6 +28,14 @@ import { usePlayback } from './player/usePlayback'
 import { useStore } from './store'
 import type { PartGroup } from './types'
 import './App.css'
+
+/**
+ * 曲线图懒加载（P5 性能迭代）：echarts + zrender 约 559 kB（gzip 189 kB），静态引入时
+ * 其下载与执行挤在首屏关键路径上（TBT/SI 主因之一）。改为 React.lazy 后，echarts chunk
+ * 在首帧渲染完成、模型开始加载之后才拉取执行，与模型下载并行互不阻塞。
+ * 移动端默认 3D Tab，图表延迟到切「曲线」Tab 才拉取，首屏完全免掉这 559 kB。
+ */
+const ParamCharts = lazy(() => import('./charts/ParamCharts'))
 
 /** 移动端断点（与 App.css 的 media query 一致） */
 const MOBILE_QUERY = '(max-width: 1024px)'
@@ -197,17 +204,20 @@ function App() {
   const sceneLoading = sceneId !== null && scene === null
   const booting = modelState === 'loading' || sceneLoading
 
-  // 曲线区（桌面横排 / 移动端曲线 Tab 共用）
+  // 曲线区（桌面横排 / 移动端曲线 Tab 共用）。ParamCharts 为 lazy 组件，
+  // Suspense 回退占位与已加载态共用同一容器样式，避免布局跳动
   const chartsBox = (
     <div className="charts-box">
       {scene && chartSets ? (
-        <ParamCharts
-          scene={scene}
-          sets={chartSets}
-          frame={frame}
-          onSeek={seek}
-          onSeriesClick={handleSeriesClick}
-        />
+        <Suspense fallback={<div className="charts-placeholder">图表加载中…</div>}>
+          <ParamCharts
+            scene={scene}
+            sets={chartSets}
+            frame={frame}
+            onSeek={seek}
+            onSeriesClick={handleSeriesClick}
+          />
+        </Suspense>
       ) : (
         <div className="charts-placeholder">参数图表（场景未加载）</div>
       )}
