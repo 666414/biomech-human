@@ -23,7 +23,7 @@ JSON.parse(document.querySelector('[data-debug]').getAttribute('data-debug'))
 
 ## 1. 真机验收（手机 / 平板 / 桌面）
 
-**前置**：站点已部署到 **https**（GitHub Pages / Vercel / 任意 https 静态托管均可，参见 `web/DEPLOY.md`）。
+**前置**：站点已部署到 **https**——**已就绪（2026-11-11）**：https://666414.github.io/biomech-human/ （GitHub Pages，已通过线上自动验收）。
 注意：`http://<局域网 IP>` **不是安全上下文，Service Worker 不会注册**，离线能力无法在局域网 http 下验收。
 
 **设备矩阵（建议）**：iPhone（Safari）、Android 手机（Chrome）、iPad（Safari）、桌面 1440p 以上（Chrome/Edge）。

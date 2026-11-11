@@ -41,6 +41,11 @@ npm run build            # tsc -b && vite build → web/dist
 
 ## 2. 通道一：GitHub Pages
 
+> **已上线（2026-11-11）**：https://666414.github.io/biomech-human/ （仓库 `666414/biomech-human`，Pages 源 = `gh-pages` 分支根）。
+> 实际采用「本地构建 → 直推 `gh-pages` 孤立分支」方式（因 `sync-assets` 依赖未入库的 `pipeline/out`，CI 构建不可用）；
+> 推送与 Pages 启用均验证通过：`.glb` MIME 正确、`bodyCount:81`、`layerMeshes 132/8/1`、SW `active`（scope = 站点子路径）、0 控制台错误。
+> 更新流程：本地 `npm run build` 后，把 `dist/` 内容提交到 `gh-pages` 分支推送即可（保留 `.nojekyll`）。
+
 仓库设置 → Pages → Source 选「GitHub Actions」，然后加入工作流（示例，按需调整路径）：
 
 ```yaml

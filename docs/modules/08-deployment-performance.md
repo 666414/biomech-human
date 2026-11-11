@@ -158,6 +158,11 @@ Vite 会把两套（`libs/draco` 与 `libs/draco/gltf`）解码器作为 `dist/a
 
 ### 5. 部署通道（详见 `web/DEPLOY.md`）
 
+- **已上线（2026-11-11）：https://666414.github.io/biomech-human/**（仓库 `666414/biomech-human`，Pages 源 = `gh-pages`
+  分支根，本地构建直推）。线上验收通过：`.glb` 200 / `model/gltf-binary`、`.wasm` 200 / `application/wasm`、
+  `modelLoaded:true`、`bodyCount:81`、`layerMeshes 132/8/1`、SW `active`（scope = `.../biomech-human/`）、0 控制台错误。
+  截图：[18-live-github-pages.png](shots/18-live-github-pages.png)。真机 / Safari 验收可直接用该地址。
+
 - GitHub Pages（含 Actions 示例）、Vercel/静态托管、校内 Nginx/IIS（含 `data/`+`draco/`+`sw.js` 拷贝清单与
   缓存头/MIME 配置）、离线整包。
 - **与设计的偏差（重要）**：「离线双击 `index.html` 可用」在当前实现下**不成立**——入口是
