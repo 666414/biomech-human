@@ -2,6 +2,22 @@
 
 日期：2026-11-04 ｜ 分支：master ｜ 执行方式：subagent-driven development
 
+> **✅ 已完成并归档（2026-11-12）**。全部 5 个 Task 落地，超出原计划的追加成果与偏差如下：
+>
+> | Task | 状态 | 结果 / 偏差 |
+> |---|---|---|
+> | 1 Draco 压缩 | ✅ | 15.6 MB → 1.08 MB（换 NIH 完整体表蒙皮后），fkcheck 1e-7 量级不变 |
+> | 2 分包 + 相对路径 | ✅ | three/echarts/react-vendor 三分包；`base: './'`；断点 900→1024 |
+> | 3 Service Worker | ✅ | 手写轻量 SW；**迭代至 v3**：glb 预缓存 + 页面 postMessage 资源回填（修复线上实测发现的首访即离线白屏） |
+> | 4 Lighthouse + 部署 | ✅ | `web/DEPLOY.md` 三通道；**GitHub Pages 已上线**（666414/biomech-human，本地构建直推 `gh-pages`——CI 因 `pipeline/out` 不入库不可用，属计划内预判）；线上 Lighthouse 中位 64→**70**（追加优化：echarts `React.lazy`） |
+> | 5 收尾 | ✅ | 本归档即收尾 |
+>
+> **追加完成**（原计划外）：子路径部署 `assetUrl()` 缺陷修复、Chrome/Edge/Firefox 走查、
+> 移动端设备模拟走查、离线/子路径/交付包哈希校验、人工验收执行包（`docs/reports/2026-11-08-manual-acceptance-package.md`）。
+> **偏差**：校内服务器验收项经用户决定取消（2026-11-08）；Lighthouse ≥85 判定归真机项。
+> **剩余人工项**：真机（含真机 Lighthouse）、Safari（macOS/iOS）、知识卡医学专家终审。
+> 证据链见 `docs/modules/08-deployment-performance.md` §5/§6 与 `docs/reports/shots/01~20-*.png`。
+
 ## 目标
 
 完成 08 板块的性能预算与交付通道：Draco 压缩（01 的 <8MB 线复验）、构建分包、
