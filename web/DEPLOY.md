@@ -168,6 +168,10 @@ U 盘分发时附一行启动命令（或打包一个 `start.cmd` 写入上述�
 
 ## 7. 部署后验收清单
 
+> **线上已验证（2026-11-11，https://666414.github.io/biomech-human/ ）**：6 条全部通过——
+> glb/wasm MIME 正确、5 场景切换与三联动正常、SW `activated`（scope = 站点子路径）、
+> 子路径部署正常、`?fkcheck=1` 误差 1.085e-7 m。首次部署到新地址时可按此清单复跑。
+
 - [ ] 首屏能看到 3D 模型，`data/models/human.glb` 返回 200 且 MIME 为 `model/gltf-binary`
 - [ ] `draco/draco_decoder.wasm` 返回 200 且 MIME 为 `application/wasm`（否则解码器回退 JS，仍可加载但更慢）
 - [ ] 场景切换（5 个）、曲线游标、知识卡三联动正常

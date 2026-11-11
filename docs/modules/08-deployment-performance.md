@@ -162,6 +162,10 @@ Vite 会把两套（`libs/draco` 与 `libs/draco/gltf`）解码器作为 `dist/a
   分支根，本地构建直推）。线上验收通过：`.glb` 200 / `model/gltf-binary`、`.wasm` 200 / `application/wasm`、
   `modelLoaded:true`、`bodyCount:81`、`layerMeshes 132/8/1`、SW `active`（scope = `.../biomech-human/`）、0 控制台错误。
   截图：[18-live-github-pages.png](shots/18-live-github-pages.png)。真机 / Safari 验收可直接用该地址。
+- **线上 Lighthouse（2026-11-11，移动预设 ×3，流量经本机代理到真实 CDN）**：Performance **61 / 64 / 66**（中位 64）。
+  FCP/LCP 0.8~0.9 s、CLS 0.001 均优；TBT 2 990~3 550 ms、SI 5.8~9.5 s 偏高——模拟 4G 下每个请求叠加
+  真实 CDN + 代理往返延迟，three/echarts 大 chunk 下载串行化被放大（本地 75/76/76、TBT 1.2~1.9 s 的口径
+  无代理延迟）。该数字**不替代真机**：真机无代理环节、且 GPU/CPU 与模拟降速不同，真机项仍按 §6 执行。
 
 - GitHub Pages（含 Actions 示例）、Vercel/静态托管、校内 Nginx/IIS（含 `data/`+`draco/`+`sw.js` 拷贝清单与
   缓存头/MIME 配置）、离线整包。
