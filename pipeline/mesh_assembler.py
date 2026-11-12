@@ -8,6 +8,7 @@
 """
 import os
 
+import numpy as np
 import trimesh
 
 
@@ -18,14 +19,18 @@ def mu_to_matrix(pos, quat):
     return T
 
 
-def assemble(tree, repo_root, exclude_prefixes=()):
+def assemble(tree, repo_root, exclude_prefixes=(), bone_fit=None):
     """返回 (trimesh.Scene, node_bodies)。
 
     节点归属（骨骼/皮肤/肌肉）由各产物自行声明，本模块只产出骨骼网格。
+    bone_fit: {`<body>__<mesh>`: f} —— 骨骼网格绕 body 原点的收缩系数
+    （skin_envelope_v5 离线配准产出，见 pipeline/bone_fit.json；只改网格顶点位置，
+    不动 body 节点层级与关节语义，FK 对账不受影响）。
     """
     scene = trimesh.Scene()
     node_bodies = []
     mesh_cache = {}
+    bone_fit = bone_fit or {}
 
     def load_mesh(fname):
         if fname not in mesh_cache:
@@ -50,10 +55,16 @@ def assemble(tree, repo_root, exclude_prefixes=()):
             key = f"{body.name}__{g['mesh']}"
             if key in scene.geometry:
                 continue
+            T = mu_to_matrix(g["pos"], g["quat"])
+            f = bone_fit.get(key)
+            if f and f != 1.0:
+                # 绕 body 原点收缩：world_geom' = world_body @ S @ T_geom（体坐标系内缩放）
+                S = np.diag([f, f, f, 1.0])
+                T = S @ T
             scene.add_geometry(
                 geom, geom_name=key, node_name=key,
                 parent_node_name=body.name,
-                transform=mu_to_matrix(g["pos"], g["quat"]),
+                transform=T,
             )
         for c in body.children:
             walk(c, body.name)

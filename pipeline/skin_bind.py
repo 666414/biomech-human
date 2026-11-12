@@ -251,6 +251,16 @@ verts_world = limb_correction('femur_l', 'calcn_l', zmin=0.25)
 verts_world = limb_correction('femur_r', 'calcn_r', zmin=0.25)
 print(f'  after: bbox={np.round(verts_world.min(0),3)}..{np.round(verts_world.max(0),3)}')
 
+# 4.5 皮肤-骨骼包络配准（P5 修复：块状骨骼与 NIH 体表局部不匹配，实测穿出 30~95mm；
+# 骨骼侧收缩已由 mesh_assembler 按 bone_fit.json 应用，此处做皮肤侧——头部后移 + 膨胀兜底）
+import sys as _sys
+
+_sys.path.insert(0, REPO)  # 允许以 `python pipeline/skin_bind.py` 方式直接运行
+from pipeline.skin_envelope import apply_skin_fit, load_bone_meshes
+
+verts_world = apply_skin_fit(verts_world, faces, load_bone_meshes(GLB_IN))
+print(f'  envelope after: bbox={np.round(verts_world.min(0),3)}..{np.round(verts_world.max(0),3)}')
+
 # 5. 世界 → pelvis local（skin_mesh 节点挂在 pelvis 下）
 R_p = trimesh.transformations.rotation_matrix(np.pi/2, [1,0,0])
 T_p = trimesh.transformations.translation_matrix([0, 0, 0.95])

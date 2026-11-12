@@ -149,6 +149,22 @@ chunk 反而稳定，且避免整条依赖。
 **体积**：组装后 15.61MB → Draco（`KHR_draco_mesh_compression`，只压几何属性，
 蒙皮结构无损）后 **1.01MB**（-93.5%）。
 
+**P5 追加：皮肤-骨骼包络配准（bone_fit + skin envelope）**。MS-Human-700 的块状
+骨骼网格（胸椎/肋骨/手/颅骨）相对 NIH 真实体表系统性穿出 30~95mm（PC 与移动端一致，
+静态资产问题，非运行时/适配缺陷；逐 body 量化审计见
+`pipeline/tools/skin_fit_audit.py`）。策略「各退一半」（2026-11-12 确认）：
+
+- **骨骼侧**：`pipeline/bone_fit.json`（`skin_envelope_v5.py` 离线迭代产出，躯干/四肢
+  0.88、手部/颅骨 0.72）→ `convert_model --bone-fit` → `mesh_assembler.assemble`
+  在几何 transform 上前乘体坐标系缩放阵。**不动 body 节点层级与关节语义**，
+  FK 对账实测仍 1.085e-7 m。
+- **皮肤侧**：`pipeline/skin_envelope.py`（`skin_bind.py` 在 A-pose 归位后调用）——
+  头部区域沿 -x 后移 40mm 对齐偏后的颅骨 + 标量膨胀场兜底残余穿出（单顶点累计 ≤20mm）。
+
+修复验证（`docs/reports/shots/21~23-skin-fit-*.png`）：PC/移动端侧视与正视下颅骨、
+脊柱、肋骨、手臂均无穿出；vitest 158 全绿；fkcheck 语义不变。
+管线重产顺序不变：`convert_model --bone-fit` → `skin_bind.py` → `assemble_skin.js`。
+
 **运行时绑定**：`assemble_skin.js` 写的是单位阵绑定；`SceneManager.loadGltfOnce` 在
 `gltf.scene.updateMatrixWorld(true)` 之后调用 `rebindSkinnedMeshes()`，把每个 SkinnedMesh
 的 `bindMatrix / bindMatrixInverse` 改成当前 `matrixWorld / inv(matrixWorld)`，

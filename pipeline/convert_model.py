@@ -10,6 +10,10 @@ def main():
     ap.add_argument("--root", required=True, help="网格路径基准目录（上游为仓库根）")
     ap.add_argument("--out", required=True, help="输出目录")
     ap.add_argument("--exclude-prefix", default=[], nargs="*", help="按前缀排除 body（肌肉瘦身用）")
+    ap.add_argument(
+        "--bone-fit", default=None,
+        help="bone_fit_scales.json（skin_envelope_v5 离线配准产出的骨骼收缩表，键为 `<body>__<mesh>`）",
+    )
     args = ap.parse_args()
 
     from pipeline.mjcf_parser import parse_mjcf
@@ -20,8 +24,12 @@ def main():
     from pipeline.validate import validate_output
 
     os.makedirs(args.out, exist_ok=True)
+    bone_fit = {}
+    if args.bone_fit and os.path.exists(args.bone_fit):
+        with open(args.bone_fit, encoding="utf-8") as f:
+            bone_fit = json.load(f)
     tree = parse_mjcf(args.xml)
-    scene, node_bodies = assemble(tree, args.root, exclude_prefixes=args.exclude_prefix)
+    scene, node_bodies = assemble(tree, args.root, exclude_prefixes=args.exclude_prefix, bone_fit=bone_fit)
     with open(os.path.join(os.path.dirname(__file__), "part_name_zh.json"), encoding="utf-8") as f:
         zh_map = json.load(f)
     meta = build_rig_meta(tree, zh_map)
