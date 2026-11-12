@@ -1,0 +1,2383 @@
+{
+ "parts": [
+  {
+   "id": "pelvis",
+   "parent": null,
+   "names": {
+    "en": "pelvis",
+    "zh": "骨盆"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "pelvis_tz",
+     "type": "slide",
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "range": [
+      -3,
+      3
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "pelvis_ty",
+     "type": "slide",
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "range": [
+      -1,
+      2
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "pelvis_tx",
+     "type": "slide",
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "range": [
+      -5,
+      5
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "pelvis_tilt",
+     "type": "hinge",
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "range": [
+      -1.5708,
+      1.5708
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "pelvis_list",
+     "type": "hinge",
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "range": [
+      -1.5708,
+      1.5708
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "pelvis_rotation",
+     "type": "hinge",
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "range": [
+      -1.5708,
+      1.5708
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "femur_r",
+   "parent": "pelvis",
+   "names": {
+    "en": "femur_r",
+    "zh": "右股骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "hip_flexion_r",
+     "type": "hinge",
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "range": [
+      -0.52,
+      2
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "hip_adduction_r",
+     "type": "hinge",
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "range": [
+      -0.85,
+      0.5
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "hip_rotation_r",
+     "type": "hinge",
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "range": [
+      -0.65,
+      0.65
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tibia_r",
+   "parent": "femur_r",
+   "names": {
+    "en": "tibia_r",
+    "zh": "右胫骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "knee_angle_r_translation3",
+     "type": "slide",
+     "axis": [
+      0.992246,
+      0.123982,
+      -0.00878916
+     ],
+     "range": [
+      -0.00187973,
+      0.00365968
+     ],
+     "anchor": [
+      -0.00809,
+      -0.003535,
+      -0.001485
+     ]
+    },
+    {
+     "name": "knee_angle_r_translation2",
+     "type": "slide",
+     "axis": [
+      0.992246,
+      0.123982,
+      -0.00878916
+     ],
+     "range": [
+      7.69254e-11,
+      0.006792
+     ],
+     "anchor": [
+      -0.00809,
+      -0.003535,
+      -0.001485
+     ]
+    },
+    {
+     "name": "knee_angle_r_translation1",
+     "type": "slide",
+     "axis": [
+      -0.124293,
+      0.989762,
+      -0.0701648
+     ],
+     "range": [
+      9.53733e-8,
+      0.00159883
+     ],
+     "anchor": [
+      -0.00809,
+      -0.003535,
+      -0.001485
+     ]
+    },
+    {
+     "name": "knee_angle_r",
+     "type": "hinge",
+     "axis": [
+      -3.98373e-10,
+      -0.0707131,
+      -0.997497
+     ],
+     "range": [
+      0,
+      2.4
+     ],
+     "anchor": [
+      -0.00809,
+      -0.003535,
+      -0.001485
+     ]
+    },
+    {
+     "name": "knee_angle_r_rotation2",
+     "type": "hinge",
+     "axis": [
+      0.992246,
+      0.123982,
+      -0.00878916
+     ],
+     "range": [
+      -0.00167821,
+      0.0335354
+     ],
+     "anchor": [
+      -0.00809,
+      -0.003535,
+      -0.001485
+     ]
+    },
+    {
+     "name": "knee_angle_r_rotation3",
+     "type": "hinge",
+     "axis": [
+      -0.124293,
+      0.989762,
+      -0.0701648
+     ],
+     "range": [
+      1.08939e-8,
+      0.262788
+     ],
+     "anchor": [
+      -0.00809,
+      -0.003535,
+      -0.001485
+     ]
+    }
+   ]
+  },
+  {
+   "id": "talus_r",
+   "parent": "tibia_r",
+   "names": {
+    "en": "talus_r",
+    "zh": "右距骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "ankle_angle_r",
+     "type": "hinge",
+     "axis": [
+      -0.105014,
+      -0.174022,
+      0.979126
+     ],
+     "range": [
+      -0.68,
+      0.52
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "calcn_r",
+   "parent": "talus_r",
+   "names": {
+    "en": "calcn_r",
+    "zh": "右跟骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "subtalar_angle_r",
+     "type": "hinge",
+     "axis": [
+      0.78718,
+      0.604747,
+      -0.120949
+     ],
+     "range": [
+      -0.34,
+      0.34
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "toes_r",
+   "parent": "calcn_r",
+   "names": {
+    "en": "toes_r",
+    "zh": "右足趾"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "mtp_angle_r",
+     "type": "hinge",
+     "axis": [
+      0.580954,
+      0,
+      -0.813936
+     ],
+     "range": [
+      -0.5,
+      0.5
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "patella_r",
+   "parent": "femur_r",
+   "names": {
+    "en": "patella_r",
+    "zh": "右髌骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "knee_angle_r_beta_translation2",
+     "type": "slide",
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "range": [
+      -0.0408267,
+      -0.0108281
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "knee_angle_r_beta_translation1",
+     "type": "slide",
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "range": [
+      -0.0227731,
+      0.0524192
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "knee_angle_r_beta_rotation1",
+     "type": "hinge",
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "range": [
+      -1.79241,
+      0.010506
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "femur_l",
+   "parent": "pelvis",
+   "names": {
+    "en": "femur_l",
+    "zh": "左股骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "hip_flexion_l",
+     "type": "hinge",
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "range": [
+      -0.52,
+      2
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "hip_adduction_l",
+     "type": "hinge",
+     "axis": [
+      -1,
+      0,
+      0
+     ],
+     "range": [
+      -0.85,
+      0.5
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "hip_rotation_l",
+     "type": "hinge",
+     "axis": [
+      0,
+      -1,
+      0
+     ],
+     "range": [
+      -0.65,
+      0.65
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "tibia_l",
+   "parent": "femur_l",
+   "names": {
+    "en": "tibia_l",
+    "zh": "左胫骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "knee_angle_l_translation3",
+     "type": "slide",
+     "axis": [
+      -0.992246,
+      -0.123982,
+      -0.00878916
+     ],
+     "range": [
+      -0.00365968,
+      0.00187973
+     ],
+     "anchor": [
+      -0.00809,
+      -0.003535,
+      0.001485
+     ]
+    },
+    {
+     "name": "knee_angle_l_translation2",
+     "type": "slide",
+     "axis": [
+      -0.992246,
+      -0.123982,
+      -0.00878916
+     ],
+     "range": [
+      -0.006792,
+      -7.69254e-11
+     ],
+     "anchor": [
+      -0.00809,
+      -0.003535,
+      0.001485
+     ]
+    },
+    {
+     "name": "knee_angle_l_translation1",
+     "type": "slide",
+     "axis": [
+      -0.124293,
+      0.989762,
+      0.0701648
+     ],
+     "range": [
+      9.53733e-8,
+      0.00159883
+     ],
+     "anchor": [
+      -0.00809,
+      -0.003535,
+      0.001485
+     ]
+    },
+    {
+     "name": "knee_angle_l",
+     "type": "hinge",
+     "axis": [
+      3.98373e-10,
+      0.0707131,
+      -0.997497
+     ],
+     "range": [
+      0,
+      2.4
+     ],
+     "anchor": [
+      -0.00809,
+      -0.003535,
+      0.001485
+     ]
+    },
+    {
+     "name": "knee_angle_l_rotation2",
+     "type": "hinge",
+     "axis": [
+      -0.992246,
+      -0.123982,
+      -0.00878916
+     ],
+     "range": [
+      -0.00167821,
+      0.0335354
+     ],
+     "anchor": [
+      -0.00809,
+      -0.003535,
+      0.001485
+     ]
+    },
+    {
+     "name": "knee_angle_l_rotation3",
+     "type": "hinge",
+     "axis": [
+      -0.124293,
+      0.989762,
+      0.0701648
+     ],
+     "range": [
+      -0.262788,
+      -1.08939e-8
+     ],
+     "anchor": [
+      -0.00809,
+      -0.003535,
+      0.001485
+     ]
+    }
+   ]
+  },
+  {
+   "id": "talus_l",
+   "parent": "tibia_l",
+   "names": {
+    "en": "talus_l",
+    "zh": "左距骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "ankle_angle_l",
+     "type": "hinge",
+     "axis": [
+      0.105014,
+      0.174022,
+      0.979126
+     ],
+     "range": [
+      -0.68,
+      0.52
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "calcn_l",
+   "parent": "talus_l",
+   "names": {
+    "en": "calcn_l",
+    "zh": "左跟骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "subtalar_angle_l",
+     "type": "hinge",
+     "axis": [
+      -0.78718,
+      -0.604747,
+      -0.120949
+     ],
+     "range": [
+      -0.34,
+      0.34
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "toes_l",
+   "parent": "calcn_l",
+   "names": {
+    "en": "toes_l",
+    "zh": "左足趾"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "mtp_angle_l",
+     "type": "hinge",
+     "axis": [
+      -0.580954,
+      0,
+      -0.813936
+     ],
+     "range": [
+      -0.5,
+      0.5
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "patella_l",
+   "parent": "femur_l",
+   "names": {
+    "en": "patella_l",
+    "zh": "左髌骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "knee_angle_l_beta_translation2",
+     "type": "slide",
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "range": [
+      -0.0408267,
+      -0.0108281
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "knee_angle_l_beta_translation1",
+     "type": "slide",
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "range": [
+      -0.0227731,
+      0.0524192
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "knee_angle_l_beta_rotation1",
+     "type": "hinge",
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "range": [
+      -1.79241,
+      0.010506
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sacrum",
+   "parent": "pelvis",
+   "names": {
+    "en": "sacrum",
+    "zh": "骶骨"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "Abdomen",
+   "parent": "sacrum",
+   "names": {
+    "en": "Abdomen",
+    "zh": "腹部"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "lumbar5",
+   "parent": "sacrum",
+   "names": {
+    "en": "lumbar5",
+    "zh": "第5腰椎"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "L5_S1_FE",
+     "type": "hinge",
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "range": [
+      -0.5,
+      0.5
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "L5_S1_LB",
+     "type": "hinge",
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "range": [
+      -0.3,
+      0.3
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "L5_S1_AR",
+     "type": "hinge",
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "range": [
+      -0.3,
+      0.3
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "lumbar4",
+   "parent": "lumbar5",
+   "names": {
+    "en": "lumbar4",
+    "zh": "lumbar4"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "lumbar3",
+   "parent": "lumbar4",
+   "names": {
+    "en": "lumbar3",
+    "zh": "lumbar3"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "lumbar2",
+   "parent": "lumbar3",
+   "names": {
+    "en": "lumbar2",
+    "zh": "lumbar2"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "lumbar1",
+   "parent": "lumbar2",
+   "names": {
+    "en": "lumbar1",
+    "zh": "第1腰椎"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "thoracic12",
+   "parent": "lumbar1",
+   "names": {
+    "en": "thoracic12",
+    "zh": "第12胸椎"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "T12_L1_FE",
+     "type": "hinge",
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "range": [
+      -0.5,
+      0.5
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "T12_L1_LB",
+     "type": "hinge",
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "range": [
+      -0.3,
+      0.3
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "T12_L1_AR",
+     "type": "hinge",
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "range": [
+      -0.3,
+      0.3
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "thoracic11",
+   "parent": "thoracic12",
+   "names": {
+    "en": "thoracic11",
+    "zh": "thoracic11"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "thoracic10",
+   "parent": "thoracic11",
+   "names": {
+    "en": "thoracic10",
+    "zh": "thoracic10"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "thoracic9",
+   "parent": "thoracic10",
+   "names": {
+    "en": "thoracic9",
+    "zh": "thoracic9"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "thoracic8",
+   "parent": "thoracic9",
+   "names": {
+    "en": "thoracic8",
+    "zh": "thoracic8"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "thoracic7",
+   "parent": "thoracic8",
+   "names": {
+    "en": "thoracic7",
+    "zh": "thoracic7"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "thoracic6",
+   "parent": "thoracic7",
+   "names": {
+    "en": "thoracic6",
+    "zh": "thoracic6"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "thoracic5",
+   "parent": "thoracic6",
+   "names": {
+    "en": "thoracic5",
+    "zh": "thoracic5"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "thoracic4",
+   "parent": "thoracic5",
+   "names": {
+    "en": "thoracic4",
+    "zh": "thoracic4"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "thoracic3",
+   "parent": "thoracic4",
+   "names": {
+    "en": "thoracic3",
+    "zh": "thoracic3"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "thoracic2",
+   "parent": "thoracic3",
+   "names": {
+    "en": "thoracic2",
+    "zh": "thoracic2"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "thoracic1",
+   "parent": "thoracic2",
+   "names": {
+    "en": "thoracic1",
+    "zh": "第1胸椎"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "head_neck",
+   "parent": "thoracic1",
+   "names": {
+    "en": "head_neck",
+    "zh": "头颈"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "T1_head_neck_FE",
+     "type": "hinge",
+     "axis": [
+      0,
+      0,
+      1
+     ],
+     "range": [
+      -0.5,
+      0.5
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "T1_head_neck_LB",
+     "type": "hinge",
+     "axis": [
+      1,
+      0,
+      0
+     ],
+     "range": [
+      -0.3,
+      0.3
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "T1_head_neck_AR",
+     "type": "hinge",
+     "axis": [
+      0,
+      1,
+      0
+     ],
+     "range": [
+      -0.3,
+      0.3
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "sternum",
+   "parent": "thoracic1",
+   "names": {
+    "en": "sternum",
+    "zh": "胸骨"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "clavicle_r",
+   "parent": "sternum",
+   "names": {
+    "en": "clavicle_r",
+    "zh": "右锁骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "sternoclavicular_r2_r",
+     "type": "hinge",
+     "axis": [
+      0.0153,
+      0.989299,
+      -0.1451
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "sternoclavicular_r3_r",
+     "type": "hinge",
+     "axis": [
+      -0.994473,
+      0,
+      -0.104997
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "clavphant_r",
+   "parent": "clavicle_r",
+   "names": {
+    "en": "clavphant_r",
+    "zh": "clavphant_r"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "unrotscap_r3_r",
+     "type": "hinge",
+     "axis": [
+      -0.994473,
+      0,
+      -0.104997
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "unrotscap_r2_r",
+     "type": "hinge",
+     "axis": [
+      0.0153,
+      0.989299,
+      -0.1451
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "scapula_r",
+   "parent": "clavphant_r",
+   "names": {
+    "en": "scapula_r",
+    "zh": "右肩胛骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "acromioclavicular_r2_r",
+     "type": "hinge",
+     "axis": [
+      0.157095,
+      0.947269,
+      -0.279291
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "acromioclavicular_r3_r",
+     "type": "hinge",
+     "axis": [
+      -0.754084,
+      0.297594,
+      0.585487
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "acromioclavicular_r1_r",
+     "type": "hinge",
+     "axis": [
+      0.6377,
+      0.1186,
+      0.7611
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "scapphant_r",
+   "parent": "scapula_r",
+   "names": {
+    "en": "scapphant_r",
+    "zh": "scapphant_r"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "unrothum_r1_r",
+     "type": "hinge",
+     "axis": [
+      0.6377,
+      0.1186,
+      0.7611
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "unrothum_r3_r",
+     "type": "hinge",
+     "axis": [
+      -0.754084,
+      0.297594,
+      0.585487
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "unrothum_r2_r",
+     "type": "hinge",
+     "axis": [
+      0.157095,
+      0.947269,
+      -0.279291
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "humphant_r",
+   "parent": "scapphant_r",
+   "names": {
+    "en": "humphant_r",
+    "zh": "humphant_r"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "elv_angle_r",
+     "type": "hinge",
+     "axis": [
+      0.0048,
+      0.999089,
+      0.0424
+     ],
+     "range": [
+      -1.6,
+      2.2
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "humphant1_r",
+   "parent": "humphant_r",
+   "names": {
+    "en": "humphant1_r",
+    "zh": "humphant1_r"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "shoulder_elv_r",
+     "type": "hinge",
+     "axis": [
+      -0.998261,
+      0.0023,
+      0.058898
+     ],
+     "range": [
+      0,
+      3.1
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "shoulder1_r2_r",
+     "type": "hinge",
+     "axis": [
+      0.0048,
+      0.999089,
+      0.0424
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "humerus_r",
+   "parent": "humphant1_r",
+   "names": {
+    "en": "humerus_r",
+    "zh": "右肱骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "shoulder_rot_r",
+     "type": "hinge",
+     "axis": [
+      0.0048,
+      0.999089,
+      0.0424
+     ],
+     "range": [
+      -0.8,
+      1.6
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ulna_r",
+   "parent": "humerus_r",
+   "names": {
+    "en": "ulna_r",
+    "zh": "右尺骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "elbow_flexion_r",
+     "type": "hinge",
+     "axis": [
+      0.0494,
+      0.0366,
+      0.998108
+     ],
+     "range": [
+      0,
+      2.2
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "radius_r",
+   "parent": "ulna_r",
+   "names": {
+    "en": "radius_r",
+    "zh": "右桡骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "pro_sup_r",
+     "type": "hinge",
+     "axis": [
+      -0.017161,
+      0.992666,
+      -0.119668
+     ],
+     "range": [
+      -1.5,
+      1.5
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "proximal_row_r",
+   "parent": "radius_r",
+   "names": {
+    "en": "proximal_row_r",
+    "zh": "右腕骨近侧列"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "deviation_r",
+     "type": "hinge",
+     "axis": [
+      -0.819064,
+      -0.135611,
+      -0.557444
+     ],
+     "range": [
+      -0.17,
+      0.43
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "flexion_r",
+     "type": "hinge",
+     "axis": [
+      0.956427,
+      -0.252207,
+      0.147104
+     ],
+     "range": [
+      -0.6,
+      0.6
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hand_r",
+   "parent": "proximal_row_r",
+   "names": {
+    "en": "hand_r",
+    "zh": "右手"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "wrist_hand_r1_r",
+     "type": "hinge",
+     "axis": [
+      0.899136,
+      -0.349053,
+      -0.26404
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "wrist_hand_r3_r",
+     "type": "hinge",
+     "axis": [
+      0.997119,
+      0.0107,
+      -0.075101
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "clavicle_l",
+   "parent": "sternum",
+   "names": {
+    "en": "clavicle_l",
+    "zh": "左锁骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "sternoclavicular_r2_l",
+     "type": "hinge",
+     "axis": [
+      -0.0153,
+      -0.989299,
+      -0.1451
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "sternoclavicular_r3_l",
+     "type": "hinge",
+     "axis": [
+      0.994473,
+      0,
+      -0.104997
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "clavphant_l",
+   "parent": "clavicle_l",
+   "names": {
+    "en": "clavphant_l",
+    "zh": "clavphant_l"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "unrotscap_r3_l",
+     "type": "hinge",
+     "axis": [
+      0.994473,
+      0,
+      -0.104997
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "unrotscap_r2_l",
+     "type": "hinge",
+     "axis": [
+      -0.0153,
+      -0.989299,
+      -0.1451
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "scapula_l",
+   "parent": "clavphant_l",
+   "names": {
+    "en": "scapula_l",
+    "zh": "左肩胛骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "acromioclavicular_r2_l",
+     "type": "hinge",
+     "axis": [
+      -0.157095,
+      -0.947269,
+      -0.279291
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "acromioclavicular_r3_l",
+     "type": "hinge",
+     "axis": [
+      0.754084,
+      -0.297594,
+      0.585487
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "acromioclavicular_r1_l",
+     "type": "hinge",
+     "axis": [
+      -0.6377,
+      -0.1186,
+      0.7611
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "scapphant_l",
+   "parent": "scapula_l",
+   "names": {
+    "en": "scapphant_l",
+    "zh": "scapphant_l"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "unrothum_r1_l",
+     "type": "hinge",
+     "axis": [
+      -0.6377,
+      -0.1186,
+      0.7611
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "unrothum_r3_l",
+     "type": "hinge",
+     "axis": [
+      0.754084,
+      -0.297594,
+      0.585487
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "unrothum_r2_l",
+     "type": "hinge",
+     "axis": [
+      -0.157095,
+      -0.947269,
+      -0.279291
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "humphant_l",
+   "parent": "scapphant_l",
+   "names": {
+    "en": "humphant_l",
+    "zh": "humphant_l"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "elv_angle_l",
+     "type": "hinge",
+     "axis": [
+      -0.0048,
+      -0.999089,
+      0.0424
+     ],
+     "range": [
+      -1.6,
+      2.2
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "humphant1_l",
+   "parent": "humphant_l",
+   "names": {
+    "en": "humphant1_l",
+    "zh": "humphant1_l"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "shoulder_elv_l",
+     "type": "hinge",
+     "axis": [
+      0.998261,
+      -0.0023,
+      0.058898
+     ],
+     "range": [
+      0,
+      3.1
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "shoulder1_r2_l",
+     "type": "hinge",
+     "axis": [
+      -0.0048,
+      -0.999089,
+      0.0424
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "humerus_l",
+   "parent": "humphant1_l",
+   "names": {
+    "en": "humerus_l",
+    "zh": "左肱骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "shoulder_rot_l",
+     "type": "hinge",
+     "axis": [
+      -0.0048,
+      -0.999089,
+      0.0424
+     ],
+     "range": [
+      -0.8,
+      1.6
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "ulna_l",
+   "parent": "humerus_l",
+   "names": {
+    "en": "ulna_l",
+    "zh": "左尺骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "elbow_flexion_l",
+     "type": "hinge",
+     "axis": [
+      -0.0494,
+      -0.0366,
+      0.998108
+     ],
+     "range": [
+      0,
+      2.2
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "radius_l",
+   "parent": "ulna_l",
+   "names": {
+    "en": "radius_l",
+    "zh": "左桡骨"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "pro_sup_l",
+     "type": "hinge",
+     "axis": [
+      0.017161,
+      -0.992666,
+      -0.119668
+     ],
+     "range": [
+      -1.5,
+      1.5
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "proximal_row_l",
+   "parent": "radius_l",
+   "names": {
+    "en": "proximal_row_l",
+    "zh": "左腕骨近侧列"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "deviation_l",
+     "type": "hinge",
+     "axis": [
+      0.819064,
+      0.135611,
+      -0.557444
+     ],
+     "range": [
+      -0.17,
+      0.43
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "flexion_l",
+     "type": "hinge",
+     "axis": [
+      -0.956427,
+      0.252207,
+      0.147104
+     ],
+     "range": [
+      -0.6,
+      0.6
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "hand_l",
+   "parent": "proximal_row_l",
+   "names": {
+    "en": "hand_l",
+    "zh": "左手"
+   },
+   "group": "skeleton",
+   "joints": [
+    {
+     "name": "wrist_hand_r1_l",
+     "type": "hinge",
+     "axis": [
+      -0.899136,
+      0.349053,
+      -0.26404
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    },
+    {
+     "name": "wrist_hand_r3_l",
+     "type": "hinge",
+     "axis": [
+      -0.997119,
+      -0.0107,
+      -0.075101
+     ],
+     "range": [
+      -3.14,
+      3.14
+     ],
+     "anchor": [
+      0,
+      0,
+      0
+     ]
+    }
+   ]
+  },
+  {
+   "id": "rib1_R",
+   "parent": "thoracic1",
+   "names": {
+    "en": "rib1_R",
+    "zh": "rib1_R"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib1_L",
+   "parent": "thoracic1",
+   "names": {
+    "en": "rib1_L",
+    "zh": "rib1_L"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib2_R",
+   "parent": "thoracic2",
+   "names": {
+    "en": "rib2_R",
+    "zh": "rib2_R"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib2_L",
+   "parent": "thoracic2",
+   "names": {
+    "en": "rib2_L",
+    "zh": "rib2_L"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib3_R",
+   "parent": "thoracic3",
+   "names": {
+    "en": "rib3_R",
+    "zh": "rib3_R"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib3_L",
+   "parent": "thoracic3",
+   "names": {
+    "en": "rib3_L",
+    "zh": "rib3_L"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib4_R",
+   "parent": "thoracic4",
+   "names": {
+    "en": "rib4_R",
+    "zh": "rib4_R"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib4_L",
+   "parent": "thoracic4",
+   "names": {
+    "en": "rib4_L",
+    "zh": "rib4_L"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib5_R",
+   "parent": "thoracic5",
+   "names": {
+    "en": "rib5_R",
+    "zh": "rib5_R"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib5_L",
+   "parent": "thoracic5",
+   "names": {
+    "en": "rib5_L",
+    "zh": "rib5_L"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib6_R",
+   "parent": "thoracic6",
+   "names": {
+    "en": "rib6_R",
+    "zh": "rib6_R"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib6_L",
+   "parent": "thoracic6",
+   "names": {
+    "en": "rib6_L",
+    "zh": "rib6_L"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib7_R",
+   "parent": "thoracic7",
+   "names": {
+    "en": "rib7_R",
+    "zh": "rib7_R"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib7_L",
+   "parent": "thoracic7",
+   "names": {
+    "en": "rib7_L",
+    "zh": "rib7_L"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib8_R",
+   "parent": "thoracic8",
+   "names": {
+    "en": "rib8_R",
+    "zh": "rib8_R"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib8_L",
+   "parent": "thoracic8",
+   "names": {
+    "en": "rib8_L",
+    "zh": "rib8_L"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib9_R",
+   "parent": "thoracic9",
+   "names": {
+    "en": "rib9_R",
+    "zh": "rib9_R"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib9_L",
+   "parent": "thoracic9",
+   "names": {
+    "en": "rib9_L",
+    "zh": "rib9_L"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib10_R",
+   "parent": "thoracic10",
+   "names": {
+    "en": "rib10_R",
+    "zh": "rib10_R"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib10_L",
+   "parent": "thoracic10",
+   "names": {
+    "en": "rib10_L",
+    "zh": "rib10_L"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib11_R",
+   "parent": "thoracic11",
+   "names": {
+    "en": "rib11_R",
+    "zh": "rib11_R"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib11_L",
+   "parent": "thoracic11",
+   "names": {
+    "en": "rib11_L",
+    "zh": "rib11_L"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib12_R",
+   "parent": "thoracic12",
+   "names": {
+    "en": "rib12_R",
+    "zh": "rib12_R"
+   },
+   "group": "skeleton",
+   "joints": []
+  },
+  {
+   "id": "rib12_L",
+   "parent": "thoracic12",
+   "names": {
+    "en": "rib12_L",
+    "zh": "rib12_L"
+   },
+   "group": "skeleton",
+   "joints": []
+  }
+ ],
+ "attachments": [
+  {
+   "id": "skin_mesh",
+   "parent": "pelvis",
+   "group": "skin",
+   "names": {
+    "en": "full skin",
+    "zh": "完整体表"
+   }
+  }
+ ]
+}

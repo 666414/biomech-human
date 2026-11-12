@@ -1,0 +1,576 @@
+[
+  {
+    "id": "kf-r-heel-strike",
+    "cardId": "r_heel_strike",
+    "term": { "zh": "足跟着地与双支撑相开始", "en": "Heel strike: onset of double support" },
+    "anatomy": "右足跟脂肪垫与跟骨结节首先触地，踝关节处于中立偏背屈位；胫骨前肌离心收缩控制前足下落（受控跖屈），臀大肌与腘绳肌在承重初期制动屈曲中的髋与膝。距下关节随后外翻约 5°~10°，足弓轻度下降以分散冲击。",
+    "biomech": "本帧对应右足着地、双支撑相开始（教学模型步态周期 1.2 s，右足跟着地取 t=0，右足再次着地闭合周期）；体重经跟骨向足弓传递，地面反作用力（GRF）快速攀升出现第一峰。教科书口径：平地行走 GRF 呈双峰，第一峰约 1.1~1.2 倍体重；本模型为准静态仿真，GRF 峰值受足部接触压深放大（步态读数约 5 倍体重），教学读数以波形形状与相对变化为主。",
+    "clinic": "足跟着地模式是步态分析的入门评估点：胫骨前肌无力表现为「足跟拍击」（前足失控落地），前足先着地则提示踝跖屈挛缩或疼痛回避。康复训练强调足跟触地的可控缓冲与踝背屈肌离心力量。",
+    "refs": [
+      { "label": "Perry J, Burnfield JM. Gait Analysis: Normal and Pathological Function. 2nd ed. Thorofare: Slack, 2010." },
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "kf-r-toe-off",
+    "cardId": "r_toe_off",
+    "term": { "zh": "足趾离地与摆动相开始", "en": "Toe-off: initiation of swing phase" },
+    "anatomy": "跖趾关节被动背伸约 50°~60°，牵拉足底腱膜产生「卷扬机制」抬高足弓；小腿三头肌（腓肠肌内侧/外侧头与比目鱼肌）向心收缩完成蹬离，腘绳肌开始预激活为摆动相屈膝做准备。",
+    "biomech": "蹬离期踝跖屈力矩达到峰值，GRF 出现第二峰（教科书口径约 1.0~1.3 倍体重；本场景为准静态仿真，GRF 读数受接触压深放大，以相对波形为教学口径）；踝跖屈肌是前进推进的主要动力来源之一，不同测算口径下其贡献约占前进总功的四至五成。本帧位于周期 50%（t=0.6 s），右足进入摆动相、对侧足转入单支撑相。",
+    "clinic": "跖屈肌无力（跟腱断裂、S1 神经根受累）导致蹬离不足、对侧步幅缩短；第 1 跖趾关节背伸受限（踇僵硬）会破坏卷扬机制。康复注重踝跖屈向心力量与足弓—跟腱弹性链的重建。",
+    "refs": [
+      { "label": "Perry J, Burnfield JM. Gait Analysis: Normal and Pathological Function. 2nd ed. Thorofare: Slack, 2010." },
+      { "label": "Hicks JH. The mechanics of the foot. II. The plantar aponeurosis and the arch. J Anat, 1954, 88(1): 25-31." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "kf-landing-impact",
+    "cardId": "landing_impact",
+    "term": { "zh": "着陆触地与 ACL 风险时刻", "en": "Landing impact: the ACL risk moment" },
+    "anatomy": "首次触地时髋、膝、踝保持微屈构成缓冲链；膝关节前交叉韧带（ACL）是限制胫骨相对股骨前移的主要被动结构——经典生物力学研究给出约 85% 的前向约束贡献（Butler 等 1980）。股四头肌在触地瞬间激活产生胫骨前剪，腘绳肌共激活则向后牵拉胫骨形成对抗。",
+    "biomech": "着陆后数十毫秒内 GRF 快速攀升（教科书口径跳跃着陆可达体重 2~4 倍以上；本场景为准静态仿真，教学读数以相对波形为主）；膝外翻（膝内扣）姿态叠加胫骨前移约束机制受损，构成 ACL 断裂的经典非接触机制——Hewett 前瞻研究证实着陆时膝外翻力矩可预测 ACL 损伤风险。",
+    "clinic": "预防要点集中在可干预的着陆动力学：软着陆技术（延长触地时间、降低峰值 GRF）、腘绳肌共激活、髋外展与躯干控制训练；女性运动员 ACL 损伤率高于男性，神经肌肉训练类预防方案有明确循证支持。",
+    "refs": [
+      { "label": "Butler DL, Noyes FR, Grood ES. Ligamentous restraints to anterior-posterior drawer in the human knee: a biomechanical study. J Bone Joint Surg Am, 1980, 62(2): 259-272." },
+      { "label": "Hewett TE, Myer GD, Ford KR, et al. Biomechanical measures of neuromuscular control and valgus loading of the knee predict anterior cruciate ligament injury risk in female athletes: a prospective study. Am J Sports Med, 2005, 33(4): 492-501." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "kf-landing-buffer",
+    "cardId": "landing_buffer",
+    "term": { "zh": "深蹲缓冲与下肢离心制动", "en": "Deep-squat buffering: eccentric braking" },
+    "anatomy": "缓冲期髋、膝、踝同步屈曲（三关节屈曲策略），股四头肌（含股外侧肌）、臀大肌与踝跖屈肌群被同时离心拉长以吸收下落动能；跟腱与髌腱等弹性结构同步储存弹性能，为再蹬伸做准备。",
+    "biomech": "离心收缩的单位力输出高于向心且代谢代价更低，是吸收动能的主要机制；软着陆者峰值 GRF 更低、到达峰值时间更长——关节屈曲幅度越大，负荷峰值在多关节间越分散，但肌肉总做功增加。本帧（t=0.6 s）处于深蹲缓冲的最深段附近（屈膝约 80°），下肢肌群的离心激活峰值已在此前的缓冲中期（约 t=0.44）出现，随后随下蹲趋缓回落，为蹬伸做准备。",
+    "clinic": "落地缓冲能力不足与膝踝损伤及再损伤相关；「跳深+软着陆」组合训练用于重建离心控制、本体感觉与落地模式，是运动康复与体能训练的常用手段。",
+    "refs": [
+      { "label": "Winter DA. Biomechanics and Motor Control of Human Movement. 4th ed. Hoboken: Wiley, 2009." },
+      { "label": "Hewett TE, Myer GD, Ford KR. Anterior cruciate ligament injuries in female athletes: Part 1, mechanisms and risk factors. Am J Sports Med, 2006, 34(2): 299-311." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "kf-lift-bent",
+    "cardId": "lift_bent",
+    "term": { "zh": "弯腰抓握与 L5-S1 高负荷", "en": "Stooped lifting: L5-S1 peak loading" },
+    "anatomy": "躯干前屈抓握时 L5-S1 节段成为上体与载荷的共同杠杆支点；半屈曲位下竖脊肌等伸躯干肌群力臂不利，部分负荷转由韧带与椎间盘被动承担；本场景双手抓握 150 N（约 15 kg）重物。",
+    "biomech": "前屈使上体质量与重物对 L5-S1 的力臂显著增大——Nachemson 活体椎间盘测压传统口径：弯腰提物时椎间盘压缩压力可升至体重的 4~6 倍以上，剪切力随屈曲角度上升，纤维环后侧应力集中，是「搬举伤腰」的经典机制。",
+    "clinic": "弯腰搬重物与腰椎间盘突出、急性腰痛相关；教学要点：物体贴近身体缩短力臂、屈膝下蹲代替弯腰、避免屈曲加扭转的组合发力。",
+    "refs": [
+      { "label": "Nachemson AL. The load on lumbar disks in different positions of the body. Clin Orthop Relat Res, 1966, 45: 107-122." },
+      { "label": "McGill SM. Low Back Disorders: Evidence-Based Prevention and Rehabilitation. 3rd ed. Champaign: Human Kinetics, 2015." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "kf-lift-up",
+    "cardId": "lift_up",
+    "term": { "zh": "起身提举与伸髋肌群主导", "en": "Rising lift: hip-extensor dominance" },
+    "anatomy": "起身阶段臀大肌与腘绳肌主导伸髋，股四头肌同步伸膝；腰椎保持中立位，竖脊肌等长收缩稳定躯干；骨盆作为髋铰链的转动基座，其前倾角度决定腰椎中立位能否维持（详见骨盆与 L5 卡）。",
+    "biomech": "伸髋与伸膝的时序协调决定 L5-S1 力矩峰值出现的时机：物体贴近身体可显著缩短载荷力臂；以伸髋肌群为主导、脊柱中立的模式对腰椎被动结构的负荷更小。本帧（t=1.3 s）代表伸髋发力、载荷离地上升的时刻。",
+    "clinic": "「髋铰链+中立位脊柱」是搬举与硬拉类动作的核心要领；慢性腰痛患者常见伸髋延迟、以腰椎伸展代偿提举，康复强调臀肌激活与动作模式再教育。",
+    "refs": [
+      { "label": "McGill SM. Low Back Disorders: Evidence-Based Prevention and Rehabilitation. 3rd ed. Champaign: Human Kinetics, 2015." },
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "kf-sh-90",
+    "cardId": "sh_90",
+    "term": { "zh": "肩外展 90° 与三角肌中束主导", "en": "Shoulder abduction to 90°: middle deltoid dominance" },
+    "anatomy": "肩外展由三角肌中束（模型 DELT2）与冈上肌协同完成：冈上肌将肱骨头压向盂窝并启动外展，三角肌中束在约 15° 后成为主力；肩胛骨同步上旋（肩肱节律约 2:1，即盂肱运动与肩胛胸壁运动之比），由斜方肌与前锯肌的力偶驱动。",
+    "biomech": "外展 60°~120° 区间（疼痛弧）肩峰下间隙最小，肩袖肌腱与肩峰下滑囊受压摩擦风险最高；外展 90° 时盂肱关节反作用力约为臂重（约占体重 5%）的 10 倍量级、接近体重的一半（Poppen 与 Walker 经典估算）。本场景三角肌三束（DELT1/2/3）激活随外展角上升。",
+    "clinic": "肩峰下疼痛弧综合征在 60°~120° 外展出现疼痛，常伴「痛弧通过」现象（越过该区间疼痛减轻）；康复强调前锯肌与斜方肌（上/中/下束）的肩胛上旋力偶，避免耸肩代偿。",
+    "refs": [
+      { "label": "Poppen NK, Walker PS. Forces at the glenohumeral joint in abduction. Acta Orthop Scand, 1978, 49(6): 486-495." },
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "kf-sh-hold",
+    "cardId": "sh_hold",
+    "term": { "zh": "静力保持与肌力矩平衡", "en": "Static hold: muscle moment balance" },
+    "anatomy": "保持位由三角肌中束、冈上肌与斜方肌等长收缩维持臂位；肩袖肌群（冈上肌、冈下肌、肩胛下肌、小圆肌）将肱骨头压稳于盂窝，关节囊与盂唇提供静态约束。",
+    "biomech": "等长收缩无关节角速度而持续输出力矩，肌力矩与重力矩平衡；持续收缩压迫肌内灌注使代谢物堆积，故静力保持比动态动作更易疲劳——力臂小、截面小的肌群（肩袖）先行力竭，耸肩与躯干侧倾等代偿模式随之出现。本帧（t=1.05 s）为 90° 保持的稳定段。",
+    "clinic": "长时间抬臂作业、伏案持物等静力姿势与肩颈疼痛相关；低负荷等长收缩训练用于恢复肌耐力，也是肌腱病康复早期常用的负荷形式。",
+    "refs": [
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "Michener LA, McClure PW, Karduna AR. Anatomical and biomechanical mechanisms of subacromial impingement syndrome. Clin Biomech, 2003, 18(5): 369-379." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "kf-inv-impact",
+    "cardId": "inv_impact",
+    "term": { "zh": "踝内翻加载与外侧缘承重", "en": "Ankle inversion loading: lateral-edge loading" },
+    "anatomy": "距下关节内翻使体重转移至足外侧缘（跟骨—骰骨—第 5 跖骨基底部一线）；踝外侧韧带复合体（距腓前韧带、跟腓韧带、距腓后韧带）自前向后依次被拉张；腓骨肌群被反射性激活以试图对抗内翻。",
+    "biomech": "真实扭伤的内翻冲击可在数十毫秒内完成，外侧韧带应变随之快速上升；本教学场景为准静态回放，内翻加载约在 0.24 s 内渐进到位，本帧代表足外侧缘承重的峰值时刻。神经肌肉反射（腓骨肌群潜伏期约 50~80 ms）常落后于冲击过程，是意外踩空/落坑时「来不及保护」的机制核心。教学模型 GRF 读数以波形相对变化为主。",
+    "clinic": "踝外侧韧带扭伤是最常见的运动损伤之一；功能性踝不稳者神经肌肉反应更迟、单腿姿势控制更差，康复核心是平衡与神经肌肉控制训练（单腿站、扰动训练），而非单纯制动。",
+    "refs": [
+      { "label": "Levangie PK, Norkin CC. Joint Structure and Function: A Comprehensive Analysis. 5th ed. Philadelphia: F.A. Davis, 2011." },
+      { "label": "Waterman BR, Owens BD, Davey S, et al. The epidemiology of ankle sprains in the United States. J Bone Joint Surg Am, 2010, 92(13): 2279-2292." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "kf-inv-risk",
+    "cardId": "inv_risk",
+    "term": { "zh": "距腓前韧带高风险时刻", "en": "The ATFL high-risk moment" },
+    "anatomy": "距腓前韧带（ATFL）起自外踝前缘、止于距骨颈外侧面，是踝外侧复合体中最薄弱、临床上最先受损的韧带；跖屈加内翻的复合位（足尖点地瞬间）使其张力最大（Broström 经典解剖研究）。本帧（t=0.45 s）为教学场景标注的外侧韧带高风险时刻：踝跖屈达到峰值、距下关节内翻仍处高位平台，构成 ATFL 张力最大的复合位。",
+    "biomech": "跖屈位时距骨较宽的前部退出踝穴、关节契合度下降，内翻力矩主要由外侧韧带承受；ATFL 断裂多发生在跖屈内翻复合暴力下，而中立位单纯内翻时跟腓韧带应力占比上升——损伤结构取决于受伤瞬间的踝位置。",
+    "clinic": "急性处理遵循 POLICE 原则（保护、适当负荷、冰敷、加压、抬高）替代传统长期制动；反复扭伤需评估 ATFL 松弛度（前抽屉试验），康复侧重本体感觉与腓骨肌反应性训练；本卡仅作教学关联，不涉及个体诊疗决策。",
+    "refs": [
+      { "label": "Broström L. Sprained ankles I: anatomic lesions in recent sprains. Acta Chir Scand, 1964, 128: 483-495." },
+      { "label": "Waterman BR, Owens BD, Davey S, et al. The epidemiology of ankle sprains in the United States. J Bone Joint Surg Am, 2010, 92(13): 2279-2292." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "part-pelvis",
+    "partId": "pelvis",
+    "term": { "zh": "骨盆", "en": "Pelvis" },
+    "anatomy": "由左右髂骨与骶骨（经骶髂关节）及前方耻骨联合围成的骨环，上承脊柱（腰骶关节）、下连双侧股骨（髋关节），是躯干与下肢之间力量传递的枢纽；体表可扪及髂嵴、髂前上棘（ASIS）与髂后上棘（PSIS），是骨盆评估的常用标志点。",
+    "biomech": "步行中骨盆以倾斜、侧倾、旋转三个自由度小幅运动（单平面幅度多在 2°~8°），减小质心垂直位移、优化步态经济性；弯腰提举时骨盆前倾角度决定髋铰链模式下的腰椎中立位。模型以 pelvis 的 6 自由度表征其空间运动。",
+    "clinic": "双侧 ASIS 高度差与骨盆前倾角的不对称常纳入腰痛及髋膝损伤的评估链条；骨盆环骨折属高能量损伤；教学侧重力学理解与姿势关联，不涉及个体诊疗。",
+    "refs": [
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "Vleeming A, Schuenke MD, Masi AT, et al. The sacroiliac joint: an overview of its anatomy, function and clinical considerations. J Anat, 2012, 221(6): 537-567." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "part-sacrum",
+    "partId": "sacrum",
+    "term": { "zh": "骶骨", "en": "Sacrum" },
+    "anatomy": "由 5 块骶椎融合而成的楔形骨，上以 L5-S1 椎间盘接第 5 腰椎（前上缘岬为体表触及的深部标志），两侧经骶髂关节与髂骨相连，下续尾骨；骶骨底约呈 30°~40° 的水平倾斜（骶骨水平角），构成腰骶段前凸与滑移趋势的解剖基础。",
+    "biomech": "上体重量经骶骨底—骶髂关节—髂骨向双下肢传导；骶髂关节依靠楔形自锁与粗大的骨间/骶髂背侧韧带承受剪应力，负重时局部应力可达体重数倍；弯腰提举场景中骶骨处于脊柱负荷链的底端。",
+    "clinic": "骶髂关节功能障碍是下腰痛的常见来源之一（挤压试验、FABER 试验等组合评估）；绝经后骨质疏松与长跑人群中骶骨应力性骨折并非罕见。",
+    "refs": [
+      { "label": "Vleeming A, Schuenke MD, Masi AT, et al. The sacroiliac joint: an overview of its anatomy, function and clinical considerations. J Anat, 2012, 221(6): 537-567." },
+      { "label": "Standring S (ed). Gray's Anatomy: The Anatomical Basis of Clinical Practice. 42nd ed. Philadelphia: Elsevier, 2021." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "part-lumbar5",
+    "partId": "lumbar5",
+    "term": { "zh": "第 5 腰椎（L5）", "en": "Fifth lumbar vertebra (L5)" },
+    "anatomy": "全脊柱中最大的椎体，与骶骨底构成腰骶连接；横突粗大厚实，髂腰韧带附着于其与髂嵴之间；L5-S1 椎间盘是腰椎负荷最集中、活动度较大的节段之一。",
+    "biomech": "弯腰提举的杠杆支点：前屈加提物时 L5-S1 椎间盘压缩力可升至体重的 4~6 倍以上（Nachemson 活体测压口径）；腰骶角使 L5 具有向前滑移趋势，由髂腰韧带与小关节对抗，椎弓峡部承受反复应力。",
+    "clinic": "峡部性腰椎滑脱（青少年运动人群腰痛的鉴别要点）与 L5-S1 椎间盘突出（S1 神经根受累：跟腱反射减弱、小腿后外侧感觉异常）是该节段代表性的教学病例；搬举动作教育是预防核心。",
+    "refs": [
+      { "label": "Nachemson AL. The load on lumbar disks in different positions of the body. Clin Orthop Relat Res, 1966, 45: 107-122." },
+      { "label": "McGill SM. Low Back Disorders: Evidence-Based Prevention and Rehabilitation. 3rd ed. Champaign: Human Kinetics, 2015." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "part-thoracic12",
+    "partId": "thoracic12",
+    "term": { "zh": "第 12 胸椎（T12）", "en": "Twelfth thoracic vertebra (T12)" },
+    "anatomy": "胸腰过渡椎体：椎体形态已近似腰椎，上缘肋凹与第 12 肋构成单肋关节；上接 T11、下接 L1，竖脊肌与胸腰筋膜在其棘突与椎板区域附着移行，是胸廓力学向腰椎力学的过渡点。",
+    "biomech": "胸腰段（约 T11~L2）是脊柱从较刚性的胸廓向较自由的腰椎过渡的应力集中区：屈曲-牵张与轴向压缩损伤在此好发；骨质疏松性椎体压缩骨折亦最常见于胸腰段。",
+    "clinic": "骨质疏松性椎体压缩骨折（跌倒后背痛、椎体楔形变）与安全带型屈曲-牵张损伤（Chance 骨折）是胸腰段两个代表性教学点；康复强调支具期之后的躯干伸肌力量重建。",
+    "refs": [
+      { "label": "Standring S (ed). Gray's Anatomy: The Anatomical Basis of Clinical Practice. 42nd ed. Philadelphia: Elsevier, 2021." },
+      { "label": "Nordin M, Frankel VH. Basic Biomechanics of the Musculoskeletal System. 4th ed. Philadelphia: Lippincott Williams & Wilkins, 2012." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "part-femur-r",
+    "partId": "femur_r",
+    "term": { "zh": "右股骨", "en": "Right femur" },
+    "anatomy": "人体最长、最强大的长骨：上端股骨头纳入髋臼，股骨颈以约 125°~135° 的颈干角连接大/小转子，骨干后缘为粗线，下端膨大形成内/外侧髁参与膝关节；大转子是体表标志与多条髋外展肌附着点。",
+    "biomech": "单腿支撑位髋关节压缩反作用力约 2.5~3 倍体重（含外展肌力贡献，Bergmann 活体测量口径），跑跳时更高；股骨颈承受弯曲应力集中，骨干承受弯扭复合载荷。着陆与提举场景中股骨是下肢负荷链的中段骨架。",
+    "clinic": "老年跌倒相关髋部骨折（股骨颈/转子间）与长跑人群股骨颈应力性骨折（张力侧）是代表性临床问题；颈干角异常（髋内翻/外翻）改变外展肌力臂并影响下肢整体力线。",
+    "refs": [
+      { "label": "Bergmann G, Graichen F, Rohlmann A. Hip joint loading during walking and running, measured in two patients. J Biomech, 1993, 26(8): 969-990." },
+      { "label": "Nordin M, Frankel VH. Basic Biomechanics of the Musculoskeletal System. 4th ed. Philadelphia: Lippincott Williams & Wilkins, 2012." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "part-patella-r",
+    "partId": "patella_r",
+    "term": { "zh": "右髌骨", "en": "Right patella" },
+    "anatomy": "人体最大的籽骨，包埋于股四头肌腱内，与股骨滑车构成髌股关节；其后面关节软骨为全身最厚的关节软骨之一（可达约 5 mm），以适应高接触压力；体表直接可扪及。",
+    "biomech": "作为伸膝装置的「滑轮」增大股四头肌伸膝力臂；髌股关节反作用力平地行走约 0.5 倍体重，上下楼梯约 2.5~3.5 倍，深蹲可达约 7 倍（Reilly 与 Martens 经典测算，教学取 3~7 倍体重的上楼下蹲区间）——屈膝越深、股四头肌力越大，髌股压力越高。",
+    "clinic": "髌股疼痛综合征（跑步膝）与髌骨软化是前膝痛最常见的原因；Q 角过大或外侧支持带紧张使髌骨轨迹外偏；康复侧重髋外展与核心控制、股四头肌内外侧力线平衡，教学中不提供个体方案。",
+    "refs": [
+      { "label": "Reilly DT, Martens M. Experimental analysis of the quadriceps muscle force and patello-femoral joint reaction force for various activities. Acta Orthop Scand, 1972, 43(2): 126-136." },
+      { "label": "Powers CM. The influence of abnormal hip mechanics on knee injury: a biomechanical perspective. J Orthop Sports Phys Ther, 2010, 40(2): 42-51." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "part-tibia-r",
+    "partId": "tibia_r",
+    "term": { "zh": "右胫骨", "en": "Right tibia" },
+    "anatomy": "小腿的负重长骨（腓骨与膝关节无直接构成关节，仅分担小腿轴向载荷的约一成）：上端胫骨平台与股骨髁构成膝关节，胫骨粗隆为髌腱附着点，前嵴（胫骨前缘）全长皮下可扪及，下端内踝构成踝穴内壁。",
+    "biomech": "体重经平台—骨干—踝穴向足传导；平台后倾角与半月板形态决定轴向载荷分配，胫骨相对股骨的前移受 ACL 约束（机制详见 landing_impact 卡）；跑跳中胫骨承受反复轴压加弯曲的疲劳应力。",
+    "clinic": "胫骨应力性骨折/应力反应是跑者小腿痛的代表病因（好发于前内侧皮质）；胫骨平台骨折多由轴向加外翻暴力所致；前嵴皮下使开放性骨折在此部位常见。",
+    "refs": [
+      { "label": "Bennell KL, Brukner PD. Epidemiology and site specificity of stress fractures. Clin Sports Med, 1997, 16(2): 179-196." },
+      { "label": "Nordin M, Frankel VH. Basic Biomechanics of the Musculoskeletal System. 4th ed. Philadelphia: Lippincott Williams & Wilkins, 2012." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "part-talus-r",
+    "partId": "talus_r",
+    "term": { "zh": "右距骨", "en": "Right talus" },
+    "anatomy": "分体、颈、头三部：体部滑车面与胫腓骨下端构成踝关节，下方与跟骨构成距下关节，头部前接舟骨；约 60% 以上表面覆有关节软骨、无肌肉附着，血供相对薄弱（跗骨管动脉、三角支等）。",
+    "biomech": "全部体重经距骨由小腿分配至足：后份传入跟骨、前份传入足弓；踝穴内距骨前宽后窄——跖屈时窄部入穴、关节契合度下降，这是踝内翻场景中跖屈位易扭伤的骨性基础。",
+    "clinic": "距骨颈骨折后缺血性坏死风险高（Hawkins 分型用于预后评估），源于其薄弱血供；距骨穹窿软骨损伤与慢性踝痛、交锁症状相关。",
+    "refs": [
+      { "label": "Hawkins LG. Injuries to the talus: a clinical and anatomic study. J Bone Joint Surg Am, 1970, 52(5): 991-1002." },
+      { "label": "Levangie PK, Norkin CC. Joint Structure and Function: A Comprehensive Analysis. 5th ed. Philadelphia: F.A. Davis, 2011." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "part-calcn-r",
+    "partId": "calcn_r",
+    "term": { "zh": "右跟骨", "en": "Right calcaneus" },
+    "anatomy": "最大的跗骨，构成足纵弓的后支点：跟骨结节为跟腱（小腿三头肌）附着点，内侧载距突托持距骨并支撑足弓，前方接骰骨；下方为承重的足跟脂肪垫；侧位影像上 Böhler 角正常约 25°~40°。",
+    "biomech": "步态与跳跃着陆中 GRF 的后柱传导起点：着地冲击经跟骨—距下关节向足弓分散；跟腱附着处张力步行中可达体重 2~3 倍以上（跑跳更高），跟骨同时是跖屈蹬离力矩的杠杆后臂。",
+    "clinic": "跟骨压缩骨折（高处坠落，Böhler 角变小）、跟腱止点病与足跟脂肪垫萎缩是足跟痛的三大教学来源；累及距下关节的跟骨骨折远期易遗留僵硬与疼痛。",
+    "refs": [
+      { "label": "Sanders R. Intra-articular fractures of the calcaneus: present state of the art. J Orthop Trauma, 1992, 6(2): 252-265." },
+      { "label": "Hicks JH. The mechanics of the foot. II. The plantar aponeurosis and the arch. J Anat, 1954, 88(1): 25-31." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "part-scapula-r",
+    "partId": "scapula_r",
+    "term": { "zh": "右肩胛骨", "en": "Right scapula" },
+    "anatomy": "贴附于胸廓后外侧的扁平三角骨：肩胛冈外端为肩峰（与锁骨构成肩锁关节），上外角为盂窝（与肱骨头构成盂肱关节），喙突向上前突出；前锯肌（贴肋面）与斜方肌（冈与棘）的附着构成其动力基础。",
+    "biomech": "肩外展时肩胛骨同步上旋（肩肱节律详见 sh_90 卡），维持盂肱对位并保留肩峰下空间；上回旋由斜方肌（上/中/下束）与前锯肌的力偶完成；肩胛胸壁「关节」实为肌肉-滑动界面，无骨性连结，肩胛骨是上肢悬吊的稳定基座。",
+    "clinic": "肩胛运动障碍（耸肩代偿、翼状肩胛）与肩峰下撞击、肩袖病互为因果；胸长神经损伤致前锯肌瘫痪的翼状肩胛是经典教学点；康复强调肩胛稳定肌群的激活与节律恢复。",
+    "refs": [
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "Michener LA, McClure PW, Karduna AR. Anatomical and biomechanical mechanisms of subacromial impingement syndrome. Clin Biomech, 2003, 18(5): 369-379." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "part-clavicle-r",
+    "partId": "clavicle_r",
+    "term": { "zh": "右锁骨", "en": "Right clavicle" },
+    "anatomy": "S 形弯曲的长骨：内侧端与胸骨柄构成胸锁关节（上肢与中轴骨之间唯一的骨性连结），外侧端与肩峰构成肩锁关节；内侧段凸向前、外侧段凸向后，全骨位于皮下可扪及。",
+    "biomech": "作为上肢悬吊的撑杆（strut）将肩胛骨推离躯干中线，维持肩峰下空间与三角肌起点的长度-张力关系；肩部着地或手撑地传导的载荷经锁骨—胸锁关节传向躯干。",
+    "clinic": "锁骨中 1/3 骨折是最常见的骨折部位之一（跌倒肩部着地）；肩锁关节脱位（AC 分离）按喙锁韧带损伤程度分型；教学中强调其「悬吊链」的力学角色。",
+    "refs": [
+      { "label": "Rockwood CA, Matsen FA, Wirth MA, et al. Rockwood and Matsen's The Shoulder. 5th ed. Philadelphia: Elsevier, 2016." },
+      { "label": "Moore KL, Dalley AF, Agur AMR. Clinically Oriented Anatomy. 8th ed. Philadelphia: Wolters Kluwer, 2018.（中译本《临床应用解剖学》）" },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "part-humerus-r",
+    "partId": "humerus_r",
+    "term": { "zh": "右肱骨", "en": "Right humerus" },
+    "anatomy": "上臂唯一长骨：上端肱骨头与盂窝构成盂肱关节，大/小结节为肩袖附着点，向下依次为外科颈、三角肌粗隆与桡神经沟；下端滑车与肱骨小头接尺桡骨，内/外上髁为前臂屈伸肌总腱附着点。",
+    "biomech": "肩外展场景中肱骨承受三角肌收缩与盂肱关节反作用力；持物与提举时载荷经手—腕—肘—肩链传导；投掷类动作中肱骨承受显著的内旋扭转应力。",
+    "clinic": "肱骨干骨折合并桡神经损伤（垂腕）与外科颈骨折（老年跌倒）是经典教学点；大结节附着部肩袖损伤与撞击综合征及投掷上肢过度使用关联。",
+    "refs": [
+      { "label": "Moore KL, Dalley AF, Agur AMR. Clinically Oriented Anatomy. 8th ed. Philadelphia: Wolters Kluwer, 2018.（中译本《临床应用解剖学》）" },
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "part-hand-r",
+    "partId": "hand_r",
+    "term": { "zh": "右手", "en": "Right hand" },
+    "anatomy": "由 8 块腕骨（近排舟骨/月骨/三角骨/豌豆骨，远排大多角骨/小多角骨/头状骨/钩骨）、5 块掌骨与 14 节指骨构成；拇指仅两节指骨但具备最大活动度的对掌功能；手背皮下可见伸肌腱轮廓，掌面被掌腱膜覆盖。",
+    "biomech": "提举场景中手是载荷入口：150 N 重物的抓握力经指—掌—腕传向前臂与上臂；抓握时屈指屈腕肌群等长收缩与腕中立位协同决定力的传递效率，腕背屈过大将削弱握力。",
+    "clinic": "腕管综合征（正中神经于屈肌支持带深面受压）是上肢最常见的嵌压性神经病；跌倒手撑地（腕背伸位）所致舟骨骨折需警惕缺血性坏死；教学中以「载荷入口」串联上肢负荷链。",
+    "refs": [
+      { "label": "Moore KL, Dalley AF, Agur AMR. Clinically Oriented Anatomy. 8th ed. Philadelphia: Wolters Kluwer, 2018.（中译本《临床应用解剖学》）" },
+      { "label": "Standring S (ed). Gray's Anatomy: The Anatomical Basis of Clinical Practice. 42nd ed. Philadelphia: Elsevier, 2021." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "part-sternum",
+    "partId": "sternum",
+    "term": { "zh": "胸骨", "en": "Sternum" },
+    "anatomy": "位于胸前壁正中的扁骨，分胸骨柄、胸骨体与剑突三部：柄上有颈静脉切迹与锁切迹（接锁骨），柄体交界处为胸骨角（平对第 2 肋，是肋骨计数的体表标志）；第 1~7 肋软骨依次与之相连。",
+    "biomech": "胸骨与肋骨围成骨性胸廓的前支柱，呼吸时胸廓前后径的变化经其传导放大；胸外按压的力学支点即胸骨体下半，成人按压深度约 5~6 cm 的教学口径。",
+    "clinic": "胸骨骨折多见于方向盘、安全带等前向暴力（鉴别中需保留心脏挫伤的意识）；心肺复苏定位（胸骨下半、两乳头连线中点）是最常用的急救教学点。",
+    "refs": [
+      { "label": "Moore KL, Dalley AF, Agur AMR. Clinically Oriented Anatomy. 8th ed. Philadelphia: Wolters Kluwer, 2018.（中译本《临床应用解剖学》）" },
+      { "label": "Standring S (ed). Gray's Anatomy: The Anatomical Basis of Clinical Practice. 42nd ed. Philadelphia: Elsevier, 2021." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-glmax1-r",
+    "cardId": "glmax1_r",
+    "term": { "zh": "臀大肌（第 1 束，上部）", "en": "Gluteus maximus (superior part, model actuator glmax1)" },
+    "anatomy": "臀大肌是人体最厚大的肌肉：起自髂骨臀后线后方、骶尾骨背面与骶结节韧带，止于髂胫束与股骨臀肌粗隆，臀下神经（L5~S2）支配；模型将其作用线分为三束（glmax1/2/3），glmax1 对应最上部的束。",
+    "biomech": "伸髋与外旋主力，上部纤维协同髋外展；步态承重反应期离心制动屈髋，蹬离期转为向心伸髋；跳跃着陆的缓冲与提举的起身均以其离心/向心收缩为核心，是髋铰链模式的主导肌。",
+    "clinic": "臀肌激活不足与伸髋延迟（以腰椎伸展代偿）在腰痛及膝痛人群中常见；臀桥、髋铰链类训练用于激活与模式重建，教学强调「先激活后强化」的原则。",
+    "refs": [
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "Moore KL, Dalley AF, Agur AMR. Clinically Oriented Anatomy. 8th ed. Philadelphia: Wolters Kluwer, 2018.（中译本《临床应用解剖学》）" },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-glmax2-r",
+    "cardId": "glmax2_r",
+    "term": { "zh": "臀大肌（第 2 束，中部）", "en": "Gluteus maximus (middle part, model actuator glmax2)" },
+    "anatomy": "臀大肌是人体最厚大的肌肉：起自髂骨臀后线后方、骶尾骨背面与骶结节韧带，止于髂胫束与股骨臀肌粗隆，臀下神经（L5~S2）支配；模型将其作用线分为三束（glmax1/2/3），glmax2 对应中部束，力学作用与上部束（glmax1）相近而力线更居中。",
+    "biomech": "伸髋与外旋主力，中部纤维以伸髋为主、外展分量弱于上部束；弯腰提举场景中其激活随伸髋发力同步上升（抓握位相对读数约 35，起身发力段升至约 68、峰值约 70），与上部束（glmax1）曲线平行而幅度略低，共同构成伸髋主导发力。",
+    "clinic": "与上部束一致：臀肌激活不足与伸髋延迟（以腰椎伸展代偿）在腰痛及膝痛人群中常见；髋铰链类训练同步动员整块臀大肌，教学强调「先激活后强化」的原则（详见臀大肌上部束卡）。",
+    "refs": [
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "Moore KL, Dalley AF, Agur AMR. Clinically Oriented Anatomy. 8th ed. Philadelphia: Wolters Kluwer, 2018.（中译本《临床应用解剖学》）" },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-bflh-r",
+    "cardId": "bflh_r",
+    "term": { "zh": "股二头肌长头", "en": "Biceps femoris, long head" },
+    "anatomy": "起自坐骨结节（腘绳肌总腱），经大腿后外侧下行，止于腓骨头（毗邻外侧副韧带）；跨髋与膝的双关节肌；坐骨神经胫侧部（胫神经，L5~S2）支配。",
+    "biomech": "伸髋、屈膝并使屈膝位小腿外旋；步态摆动末期被离心拉长以制动小腿前摆，是腘绳肌拉伤的经典时相；着陆与提举中作为 ACL 的动态拮抗肌（共激活向后牵拉胫骨）参与膝关节保护（ACL 机制详见 landing_impact 卡）。",
+    "clinic": "腘绳肌拉伤（冲刺类运动高发）复发率高，离心训练（如北欧腘绳肌练习）是循证预防手段；坐骨结节止点病见于长跑与自行车人群。",
+    "refs": [
+      { "label": "Heiderscheit BC, Sherry MA, Silder A, et al. Hamstring strain injuries: recommendations for diagnostic imaging and evidence-based rehabilitation. J Orthop Sports Phys Ther, 2010, 40(2): 67-81." },
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-semimem-r",
+    "cardId": "semimem_r",
+    "term": { "zh": "半膜肌", "en": "Semimembranosus" },
+    "anatomy": "起自坐骨结节外上压迹，止于胫骨内侧髁后内面，并发出腘斜韧带与内侧半月板附着扩展；跨髋与膝的双关节肌，胫神经（L5~S2）支配；与半腱肌、股二头肌合称腘绳肌（大腿后群）。",
+    "biomech": "伸髋、屈膝并使屈膝位胫骨内旋；对胫骨内旋与前后移位的动态控制有助于膝关节旋转稳定；着陆缓冲期与股四头肌共激活，可降低 ACL 承受的净前向剪切（ACL 机制详见 landing_impact 卡）。",
+    "clinic": "腘绳肌内侧束拉伤与膝内侧结构损伤的鉴别（触诊加病史）是运动医学教学点；腘绳肌共激活训练（抗伸膝与抗屈髋组合）用于 ACL 康复方案设计。",
+    "refs": [
+      { "label": "Heiderscheit BC, Sherry MA, Silder A, et al. Hamstring strain injuries: recommendations for diagnostic imaging and evidence-based rehabilitation. J Orthop Sports Phys Ther, 2010, 40(2): 67-81." },
+      { "label": "Nordin M, Frankel VH. Basic Biomechanics of the Musculoskeletal System. 4th ed. Philadelphia: Lippincott Williams & Wilkins, 2012." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-gaslat-r",
+    "cardId": "gaslat_r",
+    "term": { "zh": "腓肠肌外侧头", "en": "Gastrocnemius, lateral head" },
+    "anatomy": "起自股骨外侧髁后面，与内侧头、比目鱼肌共同汇成跟腱止于跟骨结节；跨膝与踝的双关节肌；胫神经（S1~S2）支配。",
+    "biomech": "踝跖屈加屈膝的双向作用：蹬离期向心跖屈产生推进力矩，着陆缓冲期离心制动踝背屈；因跨膝，深屈膝位（缓冲末期）其长度-张力关系改变，跖屈输出主要移交比目鱼肌接力完成。",
+    "clinic": "小腿后群拉伤（网球腿经典好发于内侧头与跖肌腱，外侧头相对少见）与运动后小腿紧张是常见教学点；跟腱病的负荷管理强调渐进式离心与等长训练。",
+    "refs": [
+      { "label": "Perry J, Burnfield JM. Gait Analysis: Normal and Pathological Function. 2nd ed. Thorofare: Slack, 2010." },
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-gasmed-r",
+    "cardId": "gasmed_r",
+    "term": { "zh": "腓肠肌内侧头", "en": "Gastrocnemius, medial head" },
+    "anatomy": "起自股骨内侧髁后面，汇入跟腱；跨膝与踝的双关节肌，胫神经（S1~S2）支配；横截面积大于外侧头，是小腿三头肌跖屈输出的主要贡献者之一。",
+    "biomech": "步态蹬离与跳跃着陆的核心跖屈肌：向心蹬离产生推进，离心制动控制背屈速度；深屈膝位（缓冲期）其长度缩短，跖屈任务主要由比目鱼肌接替——双关节肌「长度-张力分配」的典型教学要点。",
+    "clinic": "「网球腿」（内侧头肌-腱结合部/跖肌腱拉伤）是突发小腿后内侧疼痛的经典病因；腓肠肌紧张与踝背屈受限相关，牵伸与渐进负荷是康复基础。",
+    "refs": [
+      { "label": "Perry J, Burnfield JM. Gait Analysis: Normal and Pathological Function. 2nd ed. Thorofare: Slack, 2010." },
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-soleus-r",
+    "cardId": "soleus_r",
+    "term": { "zh": "比目鱼肌", "en": "Soleus" },
+    "anatomy": "起自胫骨腘线以下骨面、腓骨上段后面与比目鱼肌弓，汇入跟腱；只跨踝的单关节肌，胫神经（S1~S2）支配；慢肌纤维比例高，其静脉泵作用使其被称为「外周心脏」。",
+    "biomech": "踝跖屈的持续主力：步态全支撑期以等长/离心方式控制胫骨前移（「胫骨刹车」），蹬离期与腓肠肌协同输出峰值跖屈力矩；因不跨膝，屈膝位的跖屈任务主要落到比目鱼肌。",
+    "clinic": "比目鱼肌拉伤疼痛位置更靠下靠前，易被误认为跟腱病；久站人群的慢性小腿疲劳与其持续等长负荷相关；坐位屈膝位跖屈训练可特异性针对比目鱼肌。",
+    "refs": [
+      { "label": "Perry J, Burnfield JM. Gait Analysis: Normal and Pathological Function. 2nd ed. Thorofare: Slack, 2010." },
+      { "label": "Nordin M, Frankel VH. Basic Biomechanics of the Musculoskeletal System. 4th ed. Philadelphia: Lippincott Williams & Wilkins, 2012." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-tibant-r",
+    "cardId": "tibant_r",
+    "term": { "zh": "胫骨前肌", "en": "Tibialis anterior" },
+    "anatomy": "起自胫骨外侧髁、胫骨上外侧面与骨间膜，肌腱经伸肌支持带深面止于内侧楔骨内下面与第 1 跖骨底；只跨踝的单关节肌，腓深神经（L4~L5）支配。",
+    "biomech": "踝背屈与足内翻主力：步态摆动相维持足背屈（足下垂的对抗肌），足跟着地后离心收缩控制前足下落（受控跖屈）；踝内翻冲击时抗内翻主力实为腓骨肌群（外翻方向），胫骨前肌的内翻分量不构成保护——提示神经肌肉保护具有方向特异性。",
+    "clinic": "腓深神经损伤致足下垂（跨阈步态）是经典教学病例；胫骨前肌劳损见于跑坡与滑雪人群（「胫前痛」需与胫骨应力性损伤鉴别）。",
+    "refs": [
+      { "label": "Moore KL, Dalley AF, Agur AMR. Clinically Oriented Anatomy. 8th ed. Philadelphia: Wolters Kluwer, 2018.（中译本《临床应用解剖学》）" },
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-addlong-r",
+    "cardId": "addlong_r",
+    "term": { "zh": "长收肌", "en": "Adductor longus" },
+    "anatomy": "起自耻骨体与耻骨上支前面（耻骨结节下方），止于股骨粗线中份内侧唇；是大腿内收肌群中最靠前的成员；闭孔神经前支（L2~L4）支配。",
+    "biomech": "髋内收主力并协助屈髋：步态支撑期在冠状面参与骨盆稳定，与髋外展肌（臀中肌等）构成内外侧力偶；蹬离与提举时参与骨盆前倾—伸髋链的力量传递。",
+    "clinic": "腹股沟拉伤（长收肌最常受累）在足球、冰球运动员高发；髋内收力量不足与腹股沟损伤风险相关（Tyler 队列研究口径），预防训练强调渐进的内收负荷。",
+    "refs": [
+      { "label": "Tyler TF, Nicholas SJ, Campbell RJ, et al. The association of hip strength and flexibility with the incidence of adductor muscle strains in professional ice hockey players. Am J Sports Med, 2001, 29(2): 124-128." },
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-vaslat-r",
+    "cardId": "vaslat_r",
+    "term": { "zh": "股外侧肌", "en": "Vastus lateralis" },
+    "anatomy": "股四头肌中体积最大的头之一：起自大转子下外侧唇、股骨粗线外侧唇与外侧肌间隔，汇入股四头肌腱，经髌骨与髌腱止于胫骨粗隆；股神经（L2~L4）支配。",
+    "biomech": "伸膝主力（单关节肌）：跳跃着陆缓冲期离心制动屈膝，蹬伸期向心伸膝；其力线与股内侧肌的平衡影响髌骨轨迹，外侧张力过大与髌骨外偏、髌股外侧高压相关（详见髌骨卡）。",
+    "clinic": "髌股疼痛综合征康复中的内外侧力线平衡是教学主线（强调股内侧肌特异性激活的证据有限，整体髋-膝控制训练更受循证支持）；外侧结构紧张的处理以牵伸与渐进负荷为主，教学中不提供个体方案。",
+    "refs": [
+      { "label": "Powers CM. The influence of abnormal hip mechanics on knee injury: a biomechanical perspective. J Orthop Sports Phys Ther, 2010, 40(2): 42-51." },
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-vasmed-r",
+    "cardId": "vasmed_r",
+    "term": { "zh": "股内侧肌", "en": "Vastus medialis" },
+    "anatomy": "股四头肌位置最靠内下的头：起自股骨粗线内侧唇、内侧髁上线与内侧肌间隔（部分纤维与收肌腱膜相续），肌纤维向内下汇入股四头肌腱，经髌骨内上缘与髌腱止于胫骨粗隆；其远端斜行纤维束称股内侧斜肌（VMO）；股神经（L2~L4）支配。",
+    "biomech": "伸膝主力（单关节肌）：跳跃着陆场景中触地即进入高激活（t=0.28 相对读数约 52），缓冲中期（约 t=0.44）达到峰值（约 64），与股外侧肌激活曲线几乎同步，共同离心制动屈膝；其斜行纤维力线偏内，与股外侧肌的内外侧力线平衡影响髌骨轨迹（髌股关节压力详见髌骨卡）。",
+    "clinic": "膝关节制动后股内侧肌萎缩出现早、恢复慢是临床共识性观察；髌股疼痛综合征伴 VMO 激活延迟的说法流传较广，但 VMO 特异性激活训练的循证证据有限，整体髋-膝控制训练更受支持（同股外侧肌卡口径）。",
+    "refs": [
+      { "label": "Powers CM. The influence of abnormal hip mechanics on knee injury: a biomechanical perspective. J Orthop Sports Phys Ther, 2010, 40(2): 42-51." },
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-delt1-r",
+    "cardId": "DELT1_r",
+    "term": { "zh": "三角肌前束（锁骨部）", "en": "Deltoid, anterior (clavicular) part, model actuator DELT1" },
+    "anatomy": "起自锁骨外侧 1/3 前缘，纤维向后下与中、后束汇成三角肌总腱，止于肱骨三角肌粗隆；腋神经（C5~C6）支配；模型以 DELT1/2/3 对应三束，DELT1 为前束。",
+    "biomech": "肩前屈与内旋主力、外展辅助：肩外展场景中其激活随外展角上升（90° 时相对读数约 55）并在静力保持段维持高位（约 55~60）；前束力线位于盂肱横轴前方，外展位收缩除辅助外展外，还产生使肱骨头向上、向前位移的分量，需肩袖肌群的下压稳定来对抗（静力保持详见 sh_hold 卡）。",
+    "clinic": "腋神经损伤时三束同时受累（肩外侧感觉减退加外展无力）；前束与胸大肌锁骨部协同的「前链优势」训练模式（如卧推为主）与圆肩姿态相关，教学强调前、后束的平衡发展。",
+    "refs": [
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "Moore KL, Dalley AF, Agur AMR. Clinically Oriented Anatomy. 8th ed. Philadelphia: Wolters Kluwer, 2018.（中译本《临床应用解剖学》）" },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-delt2-r",
+    "cardId": "DELT2_r",
+    "term": { "zh": "三角肌中束（肩峰部）", "en": "Deltoid, middle (acromial) part, model actuator DELT2" },
+    "anatomy": "三角肌分前（锁骨部）、中（肩峰部）、后（肩胛部）三束：中束起自肩峰外缘，纤维向下外汇聚止于肱骨三角肌粗隆，腋神经（C5~C6）支配；模型以 DELT1/2/3 对应三束，DELT2 为中束。",
+    "biomech": "肩外展 15°~90° 的主力：冈上肌启动外展并将肱骨头压稳于盂窝，中束提供主要外展力矩；其收缩合力的一部分构成盂肱关节反作用力（外展 90° 时的量级见 sh_90 卡）。",
+    "clinic": "腋神经损伤（肩外侧感觉减退加外展无力）见于肩关节脱位与肱骨外科颈骨折；肩峰下撞击时中束收缩可加剧 60°~120° 疼痛弧，康复先恢复肩胛上旋力偶、再渐进强化三角肌。",
+    "refs": [
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "Poppen NK, Walker PS. Forces at the glenohumeral joint in abduction. Acta Orthop Scand, 1978, 49(6): 486-495." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-delt3-r",
+    "cardId": "DELT3_r",
+    "term": { "zh": "三角肌后束（肩胛部）", "en": "Deltoid, posterior (spinal) part, model actuator DELT3" },
+    "anatomy": "起自肩胛冈下缘，纤维向前下汇成三角肌总腱，止于肱骨三角肌粗隆；腋神经（C5~C6）支配；模型以 DELT1/2/3 对应三束，DELT3 为后束。",
+    "biomech": "肩后伸与外旋主力、外展辅助：肩外展场景中其激活在外展全程维持中等偏高的平台（90° 时相对读数约 50，保持段约 49），与前束的屈曲/内旋分量形成拮抗平衡，帮助肱骨头在盂窝内保持居中（静力保持详见 sh_hold 卡）。",
+    "clinic": "后束与肩袖外旋肌（冈下肌、小圆肌）协同的外旋训练是肩部平衡教学的常用切入点；伏案人群中常见「前紧后松」模式（前束及胸肌紧张、后束薄弱），与肩峰下撞击的发生机制相关联。",
+    "refs": [
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "Moore KL, Dalley AF, Agur AMR. Clinically Oriented Anatomy. 8th ed. Philadelphia: Wolters Kluwer, 2018.（中译本《临床应用解剖学》）" },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-trap-cl",
+    "cardId": "trap_cl",
+    "term": { "zh": "斜方肌（锁骨束，上部）", "en": "Trapezius, upper (clavicular) part, model actuator trap_cl" },
+    "anatomy": "斜方肌为覆盖颈胸背侧的三角形扁肌，分上（锁骨束）、中、下三部：上部纤维起自枕外隆凸、上项线内侧份与项韧带，向外下止于锁骨外侧 1/3、肩峰与肩胛冈上缘；副神经（CN XI）支配，颈丛（C3~C4）参与本体感觉传入。",
+    "biomech": "上提肩胛骨并参与上旋力偶：肩外展场景中其激活随外展角上升（90° 时相对读数约 40），静力保持段进一步升至约 44——持续将悬吊于胸廓的肩胛骨稳住，并与三角肌收缩产生的负荷相抗衡；上旋配合关系详见 sh_90 卡。",
+    "clinic": "耸肩代偿（上束过度激活而中下束与前锯肌不足）是肩峰下撞击与颈肩痛常见的运动模式异常；教学强调上/中/下束与前锯肌的力偶协调，而非对单一束的孤立强化。",
+    "refs": [
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "Michener LA, McClure PW, Karduna AR. Anatomical and biomechanical mechanisms of subacromial impingement syndrome. Clin Biomech, 2003, 18(5): 369-379." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-fdl-r",
+    "cardId": "fdl_r",
+    "term": { "zh": "趾长屈肌", "en": "Flexor digitorum longus" },
+    "anatomy": "起自胫骨后面中份（比目鱼肌线以下）与小腿深筋膜，经内踝后方、屈肌支持带深面进入足底，在跖骨头近侧的「Henry 结」处与踇长屈肌腱交叉互发腱束，随后分为四腱止于第 2~5 趾末节趾骨底；胫神经（S2~S3）支配。",
+    "biomech": "屈第 2~5 趾的远侧趾间关节，并协助踝跖屈与足内翻（后内侧力线）：踝内翻场景中其激活随内翻过程上升（t=0.24 相对读数约 20，t=0.45 约 24），反映前足的屈趾抓地与足弓维持反应；但其内翻分量方向与抗内翻所需的腓骨肌群相反（模型未建模腓骨肌，抗内翻的方向性问题详见 inv_impact 卡）。",
+    "clinic": "胫神经或小腿后深骨筋膜室损伤时，趾长屈肌与踇长屈肌同时受累（屈趾无力，晚期足内在肌代偿出现爪形趾）；后深骨筋膜室综合征是胫骨干骨折的严重并发问题，教学强调「跖屈内翻位」下韧带与肌力线的方向关系。",
+    "refs": [
+      { "label": "Moore KL, Dalley AF, Agur AMR. Clinically Oriented Anatomy. 8th ed. Philadelphia: Wolters Kluwer, 2018.（中译本《临床应用解剖学》）" },
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  },
+  {
+    "id": "mus-fhl-r",
+    "cardId": "fhl_r",
+    "term": { "zh": "踇长屈肌", "en": "Flexor hallucis longus" },
+    "anatomy": "起自腓骨后面下 2/3 与邻近骨间膜，肌腱经内踝后方（屈肌支持带深面）、距骨后侧结节与载距突下方的骨纤维管道进入足底，在 Henry 结处与趾长屈肌腱交叉并互发腱束，止于踇趾末节趾骨底；胫神经（S2~S3）支配。",
+    "biomech": "屈踇趾末节并强力协助踝跖屈，是蹬离期「趾—足弓—跟腱」弹性链的末端发力肌：踝内翻场景中其激活与趾长屈肌平行上升（t=0.24 相对读数约 20，t=0.45 约 24~25），体现前足内侧柱在应力下的抓握反应；其跖屈-内翻方向分量同样不能替代腓骨肌群的抗内翻功能（详见 inv_impact 卡）。",
+    "clinic": "踇长屈肌腱病（芭蕾舞者与跑坡人群多见，曾称「舞者踇趾」）与踇趾屈曲无力是足踝教学的常见病例；内踝后方「胫骨后肌腱—趾长屈肌腱—胫后动静脉—胫神经—踇长屈肌腱」的排列（Tom, Dick ANd Harry 记忆口诀）是跗管解剖的经典考点。",
+    "refs": [
+      { "label": "Moore KL, Dalley AF, Agur AMR. Clinically Oriented Anatomy. 8th ed. Philadelphia: Wolters Kluwer, 2018.（中译本《临床应用解剖学》）" },
+      { "label": "Neumann DA. Kinesiology of the Musculoskeletal System: Foundations for Rehabilitation. 3rd ed. St. Louis: Elsevier, 2017." },
+      { "label": "LNS Group. MS-Human-700：700 自由度全身肌骨模型数据集（ICRA 2024）", "url": "https://github.com/LNSGroup/MS-Human-700" }
+    ],
+    "note": "P4 内容：标准教材口径，已过独立审查（待医学专家终审）"
+  }
+]
